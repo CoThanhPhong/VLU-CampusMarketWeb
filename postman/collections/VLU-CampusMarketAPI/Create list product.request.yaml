@@ -1,0 +1,49 @@
+$kind: http-request
+url: http://localhost:5000/api/products/c
+method: POST
+body:
+  type: json
+  content: "[\r
+
+    \    {\r
+
+    \    \"name\": \"Iphone 15 Pro\",\r
+
+    \    \"description\": \"Còn mới 99%\",\r
+
+    \    \"price\": 25500000,\r
+
+    \    \"count\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\":
+    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+
+    },{\r
+
+    \    \"name\": \"Iphone 7 Pro\",\r
+
+    \    \"description\": \"Còn mới 85%\",\r
+
+    \    \"price\": 2500000,\r
+
+    \    \"count\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\":
+    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+
+    }\r
+
+    ]"
+order: 4000

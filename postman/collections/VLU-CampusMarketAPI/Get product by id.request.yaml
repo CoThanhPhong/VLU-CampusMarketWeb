@@ -1,0 +1,7 @@
+$kind: http-request
+url: http://localhost:5000/api/products/g/<id>
+method: GET
+body:
+  type: json
+  content: ""
+order: 1236

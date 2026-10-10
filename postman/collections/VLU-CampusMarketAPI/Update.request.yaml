@@ -1,0 +1,7 @@
+$kind: http-request
+url: http://localhost:5000/api/products/u/<id>
+method: PUT
+body:
+  type: json
+  content: '{"local":"Cơ sở 3"}'
+order: 6000
