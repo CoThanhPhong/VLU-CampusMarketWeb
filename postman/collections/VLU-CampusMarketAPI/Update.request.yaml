@@ -1,7 +1,15 @@
 $kind: http-request
-url: http://localhost:5000/api/products/u/<id>
+url: http://localhost:5000/api/products/u
 method: PUT
 body:
   type: json
-  content: '{"local":"Cơ sở 3"}'
+  content: "{\r
+
+    \    \"_id\": \"6ace1ce784295359649d4189\",\r
+
+    \    \"local\":\"Cơ sở 3\",\r
+
+    \    \"status\": \"Hết hàng\"\r
+
+    }"
 order: 6000

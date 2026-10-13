@@ -7,43 +7,75 @@ body:
 
     \    {\r
 
-    \    \"name\": \"Iphone 15 Pro\",\r
+    \        \"name\": \"Iphone 15 Pro\",\r
 
-    \    \"description\": \"Còn mới 99%\",\r
+    \        \"description\": \"Còn mới 99%\",\r
 
-    \    \"price\": 25500000,\r
+    \        \"price\": 1500000,\r
 
-    \    \"count\": 1,\r
+    \        \"amount\": 1,\r
 
-    \    \"local\": \"Cơ sở 2\",\r
+    \        \"local\": \"Cơ sở 1\",\r
 
-    \    \"img\":
-    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+    \        \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
 
-    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+    \        \"status\": \"Còn hàng\",\r
 
-    \    \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+    \        \"deviceType\": \"mobile\",\r
 
-    },{\r
+    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
 
-    \    \"name\": \"Iphone 7 Pro\",\r
+    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
 
-    \    \"description\": \"Còn mới 85%\",\r
+    \    },\r
 
-    \    \"price\": 2500000,\r
+    \    {\r
 
-    \    \"count\": 1,\r
+    \        \"name\": \"Iphone 8 Pro\",\r
 
-    \    \"local\": \"Cơ sở 1\",\r
+    \        \"description\": \"Còn mới 99%\",\r
 
-    \    \"img\":
-    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+    \        \"price\": 3500000,\r
 
-    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+    \        \"amount\": 2,\r
 
-    \    \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+    \        \"local\": \"Cơ sở 2\",\r
 
-    }\r
+    \        \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \        \"status\": \"Còn hàng\",\r
+
+    \        \"deviceType\": \"mobile\",\r
+
+    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+
+    \    },\r
+
+    \    {\r
+
+    \        \"name\": \"Iphone 12 Pro\",\r
+
+    \        \"description\": \"Còn mới 99%\",\r
+
+    \        \"price\": 5500000,\r
+
+    \        \"amount\": 1,\r
+
+    \        \"local\": \"Cơ sở 3\",\r
+
+    \        \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \        \"status\": \"Còn hàng\",\r
+
+    \        \"deviceType\": \"mobile\",\r
+
+    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+
+    \    }\r
 
     ]"
 order: 4000

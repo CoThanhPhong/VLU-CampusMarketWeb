@@ -1,4 +1,11 @@
 $kind: http-request
-url: http://localhost:5000/api/products/d/<id>
+url: http://localhost:5000/api/products/d
 method: DELETE
+body:
+  type: json
+  content: "{\r
+
+    \    \"_id\":\"6ace1ce784295359649d4188\"\r
+
+    }"
 order: 5000
