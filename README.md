@@ -4,8 +4,8 @@
 >**RULES**
 >- Không commit trực tiếp vào branch `main`.
 >- Không merge branch main khi chưa test kỹ
->- Hãy làm việc ở branch Test về rồi push lên nhánh Test
->- Cùng review file để xem còn lỗi hay không mới nhờ leader merge vào nhánh main
+>- Hãy làm việc ở branch Test về rồi push lên nhánh `dev`
+>- Cùng review file để xem còn lỗi hay không mới nhờ leader merge vào nhánh `main`
 
 > [!NOTE]
 >**Run Command**
