@@ -14,3 +14,5 @@
 
 ***Members:***
 - Cổ Thanh Phong - 197CT31643 (leader)
+- Nguyễn Cao Sâm - 207ct55156
+- Nguyễn Tuấn Kiệt - 2274802010459
