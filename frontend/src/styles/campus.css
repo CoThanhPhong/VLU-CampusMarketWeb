@@ -32,7 +32,7 @@ body { margin: 0; background: #f5f6f8; }
 .cm-app { min-height: 100vh; display: flex; flex-direction: column; background: var(--cm-bg); }
 .cm-main { flex: 1; }
 .cm-container { width: 100%; max-width: 1180px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
-.cm-page { padding-top: 22px; padding-bottom: 60px; }
+.cm-page { background: var(--cm-bg); padding-top: 22px; padding-bottom: 60px; }
 .cm-muted { color: var(--cm-ink-3); font-size: 14px; }
 
 /* ---------- Header / Footer ---------- */
@@ -51,7 +51,6 @@ body { margin: 0; background: #f5f6f8; }
 .cm-nav__me { color: var(--cm-brand) !important; background: var(--cm-brand-soft); }
 .cm-footer { border-top: 1px solid var(--cm-line); background: #fff; padding: 18px 0; font-size: 13px; color: var(--cm-ink-3); }
 .cm-footer .cm-container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.cm-mockpill { position: fixed; left: 14px; bottom: 14px; z-index: 40; background: #111827; color: #fff; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; opacity: 0.85; }
 
 /* ---------- Thành phần chung ---------- */
 .cm-card { background: var(--cm-card); border: 1px solid var(--cm-line); border-radius: var(--cm-radius); box-shadow: var(--cm-shadow); }
@@ -290,7 +289,6 @@ body { margin: 0; background: #f5f6f8; }
   .cm-stickybar > div { display: flex; flex-direction: column; line-height: 1.25; }
   .cm-stickybar strong { color: var(--cm-brand); font-size: 17px; }
   .cm-page { padding-bottom: 96px; }
-  .cm-mockpill { bottom: 74px; }
   .cm-toast-host { bottom: 84px; }
   .cm-modal { align-items: end; padding: 0; }
   .cm-modal__dialog { max-width: none; border-radius: 18px 18px 0 0; max-height: 92vh; }

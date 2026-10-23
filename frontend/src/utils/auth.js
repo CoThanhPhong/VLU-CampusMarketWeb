@@ -1,7 +1,3 @@
-// Đọc id người dùng đang đăng nhập từ JWT mà backend trả về ở /api/auth/login.
-// Token có dạng { id, name } (xem backend/controllers/authController.js).
-// Nếu nhóm lưu token dưới tên khác trong localStorage thì chỉ cần đổi TOKEN_KEY.
-
 export const TOKEN_KEY = "token";
 
 export function getToken() {
