@@ -4,6 +4,8 @@ import HomePage from "./pages/home/HomePage";
 import Login from "./pages/login/Login";
 import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
+import PostDetail from "./components/postDetail/PostDetail";
+import UserDetail from "./pages/userDetail/UserDetail";
 
 // Tạo sẵn các component trang ví dụ
 const Dashboard = () => <div className="component-container"></div>;
@@ -25,6 +27,10 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="create-post" element={<CreatePost />} />
             <Route path="settings" element={<Settings />} />
+            {/* Chi tiết bài đăng + thông tin người dùng */}
+            <Route path="products/:id" element={<PostDetail />} />
+            <Route path="users/:id" element={<UserDetail />} />
+            <Route path="profile" element={<UserDetail />} />
           </Route>
         </Route>
 

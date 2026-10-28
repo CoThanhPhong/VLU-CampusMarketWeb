@@ -8,6 +8,7 @@ const UserMenu = () => {
 
     navigate('/login', {replace: true})
   };
+  const goProfile = () => navigate('/profile');
   return (
     <div className="user-dropdown">
       <div className="user-dropdown-header">
@@ -16,7 +17,7 @@ const UserMenu = () => {
       </div>
       <hr className="dropdown-divider" />
       <ul className="user-dropdown-list">
-        <li className="user-dropdown-item">Hồ sơ cá nhân</li>
+        <li className="user-dropdown-item" onClick={goProfile}>Hồ sơ cá nhân</li>
         <li className="user-dropdown-item">Cài đặt tài khoản</li>
         <li className="user-dropdown-item text-danger" onClick={logOut}>Đăng xuất</li>
       </ul>
