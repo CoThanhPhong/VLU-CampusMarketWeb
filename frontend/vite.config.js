@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5000, // Cổng chạy frontend
+    port: 5001, // Cổng chạy frontend
     proxy: {
       // Cấu hình Proxy để gọi sang Backend (Express) không bị lỗi CORS
       '/api': {

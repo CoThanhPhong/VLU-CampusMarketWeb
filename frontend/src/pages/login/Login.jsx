@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../css/Login.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [mssv, setMssv] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +22,7 @@ const Login = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ mssv, password }),
       });
 
       const data = await response.json();
@@ -52,15 +52,11 @@ const Login = () => {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.866-3.582 7-8 7s-8-3.134-8-7 3.582-7 8-7 8 3.134 8 7z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 11V6m0 5h5m-5 0H7" />
-          </svg>
+          <img src="https://online.vlu.edu.vn/Content/logo/logosona.jpg"/>
         </div>
 
         {/* Tiêu đề */}
-        <h2 className="login-title">Đăng nhập tài khoản</h2>
-        <p className="login-subtitle">Chào mừng bạn quay trở lại với MERN App</p>
+        <h2 className="login-title">Đăng nhập</h2>
 
         {/* Hiển thị lỗi nếu có */}
         {error && <div className="login-error">{error}</div>}
@@ -68,12 +64,12 @@ const Login = () => {
         {/* Form đăng nhập */}
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
-            <label>Email</label>
+            <label>Tên đăng nhập</label>
             <input 
-              type="email" 
-              placeholder="name@example.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text" 
+              placeholder="MSSV" 
+              value={mssv}
+              onChange={(e) => setMssv(e.target.value)}
               required 
             />
           </div>
@@ -82,7 +78,7 @@ const Login = () => {
             <label>Mật khẩu</label>
             <input 
               type="password" 
-              placeholder="••••••••" 
+              placeholder="Mật khẩu trang online.vlu" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required 
@@ -98,7 +94,6 @@ const Login = () => {
               />
               <span>Ghi nhớ đăng nhập</span>
             </label>
-            <a href="/forgot-password" className="forgot-password">Quên mật khẩu?</a>
           </div>
 
           <button type="submit" className="login-btn" disabled={loading}>

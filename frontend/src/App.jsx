@@ -4,11 +4,11 @@ import HomePage from "./pages/home/HomePage";
 import Login from "./pages/login/Login";
 import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
+import Settings from "./pages/settings/settings";
 
-// Tạo sẵn các component trang ví dụ
+// Tạo sẵn các component trang ví dụ để không bị lỗi
 const Dashboard = () => <div className="component-container"></div>;
 const CreatePost = () => <div className="component-container"></div>;
-const Settings = () => <div className="component-container"></div>;
 
 function App() {
   return (
@@ -22,9 +22,12 @@ function App() {
         {/* Sau khi login sẽ hiển thị */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<HomePage />}>
-            <Route index element={<Dashboard />} />
-            <Route path="create-post" element={<CreatePost />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="/home" element={<Dashboard />} />
+            <Route path="/create-post" element={<CreatePost />} />
+            {/* Ví dụ tạo pages/settings/settings.jsx */}
+            {/* B1: Thêm vào sidebar.jsx */}
+            {/* B2: Thêm vào Route như bên dưới */}
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
 

@@ -1,33 +1,63 @@
-const User = require('../models/User');
+const User = require('../models/User'); // Có thể giữ hoặc bỏ nếu không dùng DB nữa
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const axios = require('axios')
-
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ message: 'Missing fields' });
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email already used' });
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
-    res.status(201).json({ id: user._id, name: user.name, email: user.email });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+const axios = require('axios');
+const { wrapper } = require('axios-cookiejar-support');
+const { CookieJar } = require('tough-cookie');
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Missing fields' });
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
-    const token = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_SECRET || 'changeme', { expiresIn: '1d' });
-    res.json({ token });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    // 1. Nhận mssv/username và password từ React gửi lên
+    const { mssv, password } = req.body;
+    if (!mssv || !password) {
+      return res.status(400).json({ message: 'Missing fields' });
+    }
+
+    // 2. Tạo CookieJar để duy trì Session (giống requests.Session trong Python)
+    const jar = new CookieJar();
+    const client = wrapper(axios.create({ jar }));
+
+    // 3. Chuẩn bị payload dạng form-urlencoded (data=payload)
+    const payload = new URLSearchParams({
+      txtTaiKhoan: mssv, // Hoặc username tùy theo trang ngoài
+      txtMatKhau: password
+    });
+
+    const loginUrl = 'https://online.vlu.edu.vn/Login';
+
+    // 4. Gửi request POST đăng nhập sang trang ngoài
+    const loginResponse = await client.post(loginUrl, payload.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
+
+    const responseText = loginResponse.data; // Tương đương login.text trong Python
+
+    // 5. Kiểm tra thông báo lỗi (hỗ trợ cả text thường lẫn HTML entities)
+    const hasError = 
+      responseText.includes('Tên đăng nhập hoặc mật khẩu không chính xác') || 
+      responseText.includes('T&#234;n đăng nhập hoặc mật khẩu kh&#244;ng ch&#237;nh x&#225;c');
+
+    if (hasError) {
+      return res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không chính xác' });
+    }
+
+    // --- ĐĂNG NHẬP TRANG NGOÀI THÀNH CÔNG ---
+    // (Tùy chọn) Bạn có thể tạo một JWT token cục bộ của ứng dụng MERN để trả về cho React lưu trữ
+    const token = jwt.sign(
+      { mssv: mssv }, 
+      process.env.JWT_SECRET || 'changeme', 
+      { expiresIn: '1d' }
+    );
+
+    return res.status(200).json({ 
+      message: 'Đăng nhập thành công qua hệ thống VLU!' 
+    });
+
+  } catch (error) {
+    console.error('Lỗi external login:', error.message);
+    return res.status(500).json({ message: 'Lỗi server kết nối trang VLU: ' + error.message });
   }
 };
