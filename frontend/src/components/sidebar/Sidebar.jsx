@@ -25,6 +25,7 @@ const Sidebar = ({ isOpen }) => {
         <span>Tạo bài viết</span>
       </NavLink>
 
+      {/* Tạo 1 NavLink để hiển thị bên thanh sidebar cho file settings.jsx vừa tạo với cấu trúc classname như dưới để css đẹp */}
       <NavLink 
         to="/settings" 
         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
