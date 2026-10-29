@@ -10,10 +10,10 @@ export default function CreateProductPage() {
     name: '',
     description: '',
     price: '',
-    amount: 1,
+    amount: 1, // Bắt buộc theo Schema
     local: 'Cơ sở 1',
     img: '',
-    status: 'Còn hàng',
+    status: 'Còn hàng', // Chỉ được dùng 'Còn hàng' hoặc 'Hết hàng'
     deviceType: 'mobile'
   });
 
@@ -24,9 +24,27 @@ export default function CreateProductPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    axios.post('http://localhost:5000/api/products/c', formData)
+    // Validate: Tuyệt đối không cho phép giá âm
+    if (Number(formData.price) < 0) {
+      alert('Giá bán không được để số âm!');
+      return;
+    }
+    if (Number(formData.amount) < 1) {
+      alert('Số lượng phải từ 1 trở lên!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Tự động đóng gói thêm startDate (Ngày tạo) để đáp ứng yêu cầu required: true của Backend
+    const dataToSend = {
+      ...formData,
+      startDate: new Date().toISOString()
+    };
+    
+    // Gọi API: Đã bỏ tiền tố http://localhost:5000
+    axios.post('/api/products/c', dataToSend)
       .then((res) => {
         if (res.data.success) {
           alert('Đăng bài viết mới thành công!');
@@ -37,7 +55,7 @@ export default function CreateProductPage() {
       })
       .catch((err) => {
         console.error('Lỗi khi gọi API Đăng bài:', err);
-        alert('Đã xảy ra lỗi hệ thống! Vui lòng kiểm tra Console.');
+        alert('Lưu thất bại! Bạn hãy F12 -> Network để xem chi tiết nhé.');
       })
       .finally(() => {
         setIsLoading(false);
@@ -52,14 +70,14 @@ export default function CreateProductPage() {
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Tên thiết bị (VD: iPhone 13 Pro 128GB)</label>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Tên thiết bị</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} required style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
         </div>
 
         <div style={{ display: 'flex', gap: '16px' }}>
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Giá bán (VNĐ)</label>
-            <input type="number" name="price" value={formData.price} onChange={handleChange} required style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="number" name="price" value={formData.price} onChange={handleChange} required min="0" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Loại thiết bị</label>
@@ -85,14 +103,20 @@ export default function CreateProductPage() {
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Tình trạng</label>
             <select name="status" value={formData.status} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }}>
               <option value="Còn hàng">Còn hàng</option>
-              <option value="Đã bán">Đã bán</option>
+              <option value="Hết hàng">Hết hàng</option> {/* Sửa lại cho khớp Backend */}
             </select>
           </div>
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Đường dẫn Ảnh (Link URL)</label>
-          <input type="url" name="img" value={formData.img} onChange={handleChange} required placeholder="https://..." style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ flex: 2 }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Đường dẫn Ảnh (Link URL)</label>
+            <input type="url" name="img" value={formData.img} onChange={handleChange} required placeholder="https://..." style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Số lượng</label>
+            <input type="number" name="amount" value={formData.amount} onChange={handleChange} required min="1" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
         </div>
 
         <div>

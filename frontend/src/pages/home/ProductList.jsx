@@ -12,7 +12,7 @@ export default function ProductList() {
   const [selectedLocal, setSelectedLocal] = useState('all');
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/products/g')
+    axios.get('/api/products/g')
       .then((res) => {
         if (res.data.success) {
           setProducts(res.data.data || []);
