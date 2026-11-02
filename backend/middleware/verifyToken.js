@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+// 1. Middleware xác thực Token
 const verifyToken = (req, res, next) => {
   // Lấy header Authorization từ request client gửi lên
   const authHeader = req.headers.authorization;
@@ -15,13 +16,13 @@ const verifyToken = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    // Giải mã token bằng secret key (phải trùng với lúc bạn tạo token ở hàm login)
+    // Giải mã token bằng secret key
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'VLU_SECRET_KEY');
     
-    // Gán thông tin đã giải mã (ví dụ: id hoặc mssv) vào req.user để controller sử dụng
+    // Gán thông tin đã giải mã vào req.user để controller sử dụng
     req.user = decoded; 
     
-    next(); // Cho phép đi tiếp vào Controller
+    next(); // Cho phép đi tiếp vào Controller hoặc Middleware tiếp theo
   } catch (error) {
     return res.status(403).json({ 
       success: false, 
@@ -30,4 +31,18 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = verifyToken;
+// 2. Middleware kiểm tra quyền Admin (ĐÃ TÁCH RA NGOÀI HOÀN TOÀN)
+const isAdmin = (req, res, next) => {
+  console.log('Thông tin user từ token:', req.user.role); // Debug thông tin user từ token
+  if (req.user && req.user.role === 'admin') {
+    next(); // Cho phép đi tiếp
+  } else {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Bạn không có quyền truy cập (Yêu cầu tài khoản Admin)!' 
+    });
+  }
+};
+
+// Export cả hai hàm để bên file Route có thể gọi chung
+module.exports = { verifyToken, isAdmin };

@@ -1,0 +1,27 @@
+$kind: http-request
+url: http://localhost:5000/api/auth/login
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"mssv\": \"\",\r
+
+    \    \"password\": \"\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Đăng nhập thành công (Status 200)\", function () {\r
+
+      \ pm.response.to.have.status(200);\r
+
+      });\r
+
+      // Lưu token vào biến môi trường\r
+
+      var jsonData = pm.response.json();\r
+
+      pm.environment.set(\"token\", jsonData.token);"
+    language: text/javascript
+order: 3000
