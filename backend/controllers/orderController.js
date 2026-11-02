@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-const Order = require('../models/order.js');
-const Product = require('../models/product.js');
-=======
+
 const Order = require('../models/order'); // Đổi thành chữ hoa Order để chuẩn Mongoose Model
 const Product = require('../models/product');
 const Cart = require('../models/Cart');
->>>>>>> 7fe85e7 (UPDATE SaveSession và Lưu cookie)
 
 // 1. Tạo đơn hàng mới (Dùng cho trang Checkout)
 exports.createOrder = async (req, res) => {

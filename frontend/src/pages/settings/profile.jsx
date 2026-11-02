@@ -1,55 +1,117 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// Bật cấu hình để axios tự động gửi cookie đi kèm trong mọi request
+axios.defaults.withCredentials = true;
+
 const SettingProfile = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  
+  // State quản lý lỗi tải ảnh để tự chuyển về ảnh mặc định khi link hỏng
+  const [imgError, setImgError] = useState(false);
 
-  // Lấy data từ LocalStorage, nếu trống (lỗi chưa đăng nhập) thì dùng dữ liệu mẫu cho đẹp UI
-  const authData = localStorage.getItem('user') || localStorage.getItem('userInfo');
-  const currentUser = authData ? JSON.parse(authData) : {
-    name: 'Nguyễn Cao Sâm',
-    mssv: '207CT55156',
-    phone: '0901234567',
-    email: 'sam.207ct55156@vanlanguni.vn',
-    avatar: 'https://i.pinimg.com/736x/8a/a5/d8/8aa5d8b74ccbb15a2039db8c34f3c7e8.jpg',
-    bio: 'Sinh viên khoa Công nghệ Thông tin - Trường Đại học Văn Lang.'
+  // Lấy dữ liệu user thực tế từ sessionStorage hoặc localStorage
+  const getInitialUser = () => {
+    try {
+      const authData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (authData) {
+        return JSON.parse(authData);
+      }
+    } catch (e) {
+      console.error("Lỗi đọc dữ liệu lưu trữ:", e);
+    }
+    return {};
   };
 
+  const currentUser = getInitialUser();
+
   const [formData, setFormData] = useState({
-    name: currentUser.name || '',
     mssv: currentUser.mssv || '',
-    phone: currentUser.phone || '',
-    bio: currentUser.bio || '',
-    avatar: currentUser.avatar || '',
-    email: currentUser.email || ''
+    email: currentUser.email || '',
+    profile: {
+      name: currentUser.profile?.name || '',
+      phone: currentUser.profile?.phone || '',
+      bio: currentUser.profile?.bio || '',
+      avatar: currentUser.profile?.avatar || ''
+    }
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Các trường nằm bên trong object profile
+    if (['name', 'phone', 'bio', 'avatar'].includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          [name]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+
+    // Reset trạng thái lỗi ảnh khi người dùng nhập link avatar mới
+    if (name === 'avatar') {
+      setImgError(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+ const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
+    setMessage({ type: '', text: '' });
     
-    // Gửi API update (kệ Backend chạy được hay lỗi, form vẫn hiện thông báo đẹp)
-    axios.post('/api/users/update', { _id: currentUser._id || currentUser.id, ...formData })
-      .then((res) => {
-        if (res.data.success) {
-          setMessage({ type: 'success', text: '🎉 Cập nhật hồ sơ thành công!' });
+    axios.post('/api/auth/user/u', formData.profile)
+      .then((response) => {
+        const resData = response.data;
+
+        if (resData.success) {
+          setMessage({ type: 'success', text: '🎉 ' + (resData.message || 'Cập nhật hồ sơ thành công!') });
+          
+          // 1. Tạo object user mới chuẩn hóa dữ liệu
+          const updatedUser = {
+            ...currentUser,
+            profile: {
+              ...(currentUser.profile || {}),
+              ...formData.profile
+            }
+          };
+          
+          const userStr = JSON.stringify(updatedUser);
+          if (localStorage.getItem('user')) localStorage.setItem('user', userStr);
+          if (sessionStorage.getItem('user')) sessionStorage.setItem('user', userStr);
+          
+          // Nút fallback nếu cả 2 chưa có
+          if (!localStorage.getItem('user') && !sessionStorage.getItem('user')) {
+            sessionStorage.setItem('user', userStr);
+          }
+
+          // 3. Phát sự kiện toàn hệ thống
+          window.dispatchEvent(new Event('userUpdated'));
+
         } else {
-          setMessage({ type: 'error', text: '⚠️ ' + res.data.message });
+          setMessage({ type: 'error', text: '⚠️ ' + (resData.message || 'Cập nhật thất bại!') });
         }
       })
-      .catch(() => setMessage({ type: 'success', text: '🎉 Giao diện đã hoàn thiện (Chờ nối API)!' }))
+      .catch((err) => {
+        const errorMsg = err.response?.data?.message || err.message || 'Lỗi kết nối đến server!';
+        setMessage({ type: 'error', text: `❌ ${errorMsg}` });
+      })
       .finally(() => setLoading(false));
   };
+
+  // Ảnh dự phòng khi ô input avatar trống hoặc link ảnh ngoài bị lỗi/chặn CORS
+  const fallbackAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(formData.profile.name || 'User') + '&background=0D8ABC&color=fff&size=100';
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
       
-      {/* Khung chứa Form */}
       <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)' }}>
         
         {/* Tiêu đề */}
@@ -63,7 +125,7 @@ const SettingProfile = () => {
           </div>
         </div>
 
-        {/* Thông báo */}
+        {/* Thông báo trạng thái */}
         {message.text && (
           <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '15px', fontWeight: '500', backgroundColor: message.type === 'success' ? '#f0fdf4' : '#fef2f2', color: message.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
             {message.text}
@@ -72,19 +134,26 @@ const SettingProfile = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           
-          {/* Avatar Section */}
+          {/* Avatar Section với tính năng Preview trực tiếp */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div style={{ position: 'relative' }}>
               <img 
-                src={formData.avatar} 
-                alt="Avatar" 
-                style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
-                onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=100' }}
+                src={!imgError && formData.profile.avatar ? formData.profile.avatar : fallbackAvatar} 
+                alt="Avatar Preview" 
+                onError={() => setImgError(true)}
+                style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #fff', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', backgroundColor: '#f1f5f9' }}
               />
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Đường dẫn Ảnh đại diện</label>
-              <input type="url" name="avatar" value={formData.avatar} onChange={handleChange} placeholder="https://..." style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', transition: 'border 0.2s', boxSizing: 'border-box' }} />
+              <input 
+                type="url" 
+                name="avatar" 
+                value={formData.profile.avatar} 
+                onChange={handleChange} 
+                placeholder="Dán đường dẫn ảnh trực tiếp vào đây (https://...)" 
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} 
+              />
             </div>
           </div>
 
@@ -92,7 +161,7 @@ const SettingProfile = () => {
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Họ và tên</label>
-              <input type="text" name="name" value={formData.name} onChange={handleChange} required style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+              <input type="text" name="name" value={formData.profile.name} onChange={handleChange} required style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: '1 1 300px' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>
@@ -106,7 +175,7 @@ const SettingProfile = () => {
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 300px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Số điện thoại</label>
-              <input type="text" name="phone" value={formData.phone} onChange={handleChange} style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+              <input type="text" name="phone" value={formData.profile.phone} onChange={handleChange} style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: '1 1 300px' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>
@@ -119,7 +188,7 @@ const SettingProfile = () => {
           {/* Dòng 3: Bio */}
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Giới thiệu bản thân</label>
-            <textarea name="bio" rows="4" value={formData.bio} onChange={handleChange} placeholder="Viết một vài dòng giới thiệu về bạn..." style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+            <textarea name="bio" rows="4" value={formData.profile.bio} onChange={handleChange} placeholder="Viết một vài dòng giới thiệu về bạn..." style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
           </div>
 
           {/* Nút Submit */}

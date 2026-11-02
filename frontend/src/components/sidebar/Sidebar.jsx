@@ -1,13 +1,18 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const Sidebar = ({ isOpen }) => {
+  const location = useLocation();
+
+  // Kiểm tra nếu đường dẫn hiện tại là "/" hoặc "/home" thì active Trang chủ
+  const isHomeActive = location.pathname === "/" || location.pathname === "/home";
+
   return (
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <NavLink
         to="/"
         end
-        className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+        className={() => `nav-item ${isHomeActive ? "active" : ""}`}
       >
         <svg
           width="20"
@@ -68,7 +73,6 @@ const Sidebar = ({ isOpen }) => {
         <span>Đơn hàng</span>
       </NavLink>
 
-      {/* Tạo 1 NavLink để hiển thị bên thanh sidebar cho file settings.jsx vừa tạo với cấu trúc classname như dưới để css đẹp */}
       <NavLink
         to="/settings"
         className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}

@@ -35,11 +35,10 @@ const Login = () => {
 
       if (rememberMe) {
         localStorage.setItem('user', JSON.stringify(data.user));
-      } else {
-        sessionStorage.setItem('user', JSON.stringify(data.user));
       }
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công
+      sessionStorage.setItem('user', JSON.stringify(data.user));
       navigate('/home');
     } catch (err) {
       setError(err.message);
