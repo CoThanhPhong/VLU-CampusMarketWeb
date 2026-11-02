@@ -44,6 +44,7 @@ async function UserInfo(apiClient, mssv, rawPassword) {
         });
         await newUser.save();
 
+        const defautAvatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${userInfo.name}`
         // 4. Tạo mới UserDetail và liên kết 2 chiều
         const newUserDetail = new UserDetail({
             userID: newUser._id,
@@ -52,7 +53,7 @@ async function UserInfo(apiClient, mssv, rawPassword) {
             email: userInfo.email,
             phone: userInfo.phone,
             bio: '',
-            avatar: ''
+            avatar: defautAvatarUrl
         });
         await newUserDetail.save();
 
