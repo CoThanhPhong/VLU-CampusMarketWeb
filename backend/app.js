@@ -10,6 +10,6 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
-app.get('/', (req, res) => res.send('Backend is running...'));
+app.get('/', (req, res) => res.json({ msg: 'DevBoost Backend' }));
 
 module.exports = app;
