@@ -13,6 +13,8 @@ import UserDetail from "./pages/userDetail/UserDetail";
 import CartPage from "./pages/cart/cartPage";
 import OrderListPage from "./pages/order/ordersPage";
 import CheckoutPage from "./components/checkout/checkoutPage";
+import ProductList from "./pages/home/ProductList"; 
+import CreateProductPage from "./pages/create/CreateProductPage";
 
 function App() {
   return (
@@ -46,7 +48,7 @@ function App() {
             {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/settingProfile" element={<SettingProfile />} />
-            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/product/:id" element={<PostDetail />} />
             <Route path="/user/:id" element={<UserDetail />} />
           </Route>
         </Route>
