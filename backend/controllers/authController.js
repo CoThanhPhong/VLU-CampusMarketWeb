@@ -3,6 +3,7 @@ const axios = require("axios");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 const UserInfo = require("../middleware/userInfo");
+const User = require("../models/User"); // Đảm bảo đã require model User nếu chưa có
 
 exports.login = async (req, res) => {
   try {
@@ -42,18 +43,29 @@ exports.login = async (req, res) => {
         .json({ message: "Tên đăng nhập hoặc mật khẩu không chính xác" });
     }
 
-    // Truyền thêm password vào UserInfo để phục vụ việc tạo mới user nếu chưa có trong DB
+    // 1. Lấy hoặc tạo mới user từ hệ thống VLU
     const user = await UserInfo(client, mssv, password);
 
+    // 2. QUAN TRỌNG: Populate thông tin profile để lấy avatar gửi về cho Frontend
+    const populatedUser = await User.findById(user._id).populate('profile');
+
     const token = jwt.sign(
-      { id: user._id, mssv: mssv, role: user.role }, // Payload chứa id của user để findById ở profile
-      process.env.JWT_SECRET || "VLU_SECRET_KEY",
+      { id: user._id, mssv: mssv, role: user.role }, 
+      process.env.JWT_SECRET || "VLU_SECRET_KEY", 
       { expiresIn: "1d" },
     );
 
+    // 3. Trả về cả token VÀ object user (đã có profile chứa avatar)
     return res.status(200).json({
       success: true,
       token,
+      user: {
+        id: populatedUser._id,
+        name: populatedUser.name,
+        email: populatedUser.email,
+        role: populatedUser.role,
+        profile: populatedUser.profile
+      },
       message: "Đăng nhập thành công qua hệ thống VLU và đã đồng bộ thông tin!",
     });
   } catch (error) {

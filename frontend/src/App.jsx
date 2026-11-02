@@ -4,7 +4,8 @@ import HomePage from "./pages/home/HomePage";
 import Login from "./pages/login/Login";
 import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
-import Settings from "./pages/settings/settings";
+import Settings from "./pages/settings/setting";
+import SettingProfile from "./pages/settings/profile";
 
 // Tạo sẵn các component trang ví dụ để không bị lỗi
 const Dashboard = () => <div className="component-container"></div>;
@@ -28,6 +29,7 @@ function App() {
             {/* B1: Thêm vào sidebar.jsx */}
             {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settingProfile" element={<SettingProfile />} />
           </Route>
         </Route>
 
