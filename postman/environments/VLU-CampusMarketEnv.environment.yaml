@@ -1,0 +1,4 @@
+name: VLU-CampusMarketEnv
+values:
+  - key: token
+    value: ''

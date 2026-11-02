@@ -46,13 +46,14 @@ exports.login = async (req, res) => {
     const user = await UserInfo(client, mssv, password);
 
     const token = jwt.sign(
-      { id: user._id, mssv: mssv }, // Payload chứa id của user để findById ở profile
+      { id: user._id, mssv: mssv, role: user.role }, // Payload chứa id của user để findById ở profile
       process.env.JWT_SECRET || "VLU_SECRET_KEY",
       { expiresIn: "1d" },
     );
 
     return res.status(200).json({
-      token: token,
+      success: true,
+      token,
       message: "Đăng nhập thành công qua hệ thống VLU và đã đồng bộ thông tin!",
     });
   } catch (error) {

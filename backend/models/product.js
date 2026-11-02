@@ -11,6 +11,7 @@ const ProductSchema = new mongoose.Schema({
   status: {type: String, enum: ["Còn hàng", "Hết hàng"], default: "Còn hàng"},
   deviceType: { type: String, enum: ["mobile", "tablet", "laptop", "mac"], required:true },
   endDate: { type: Date, required: false },
+  author: { type: mongoose.Schema.ObjectId, ref: "user", required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('product', ProductSchema);
