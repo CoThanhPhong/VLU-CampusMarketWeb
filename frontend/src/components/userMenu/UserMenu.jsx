@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Hoặc dùng axios client đã cấu hình sẵn của bạn
 
 const UserMenu = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({
     name: 'Đang tải...',
     email: 'Đang tải...',
-    avatar: ''
+    avatar: '',
+    id: ''
   });
 
   // Gọi API lấy thông tin user khi component được render
@@ -17,18 +17,19 @@ const UserMenu = () => {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) return;
 
-        const response = await axios.get('/api/auth/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        const response = await fetch('/api/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Không thể lấy hồ sơ');
 
-        if (response.data.success) {
-          const { name, email, profile } = response.data.data;
+        if (result.success) {
+          const { name, email, profile } = result.data;
           setUserInfo({
             name: name || profile?.name || 'Người dùng',
             email: email || profile?.email || '',
-            avatar: profile?.avatar || ''
+            avatar: profile?.avatar || '',
+            id: result.data.id || result.data._id || ''
           });
         }
       } catch (error) {
@@ -54,7 +55,7 @@ const UserMenu = () => {
       </div>
       <hr className="dropdown-divider" />
       <ul className="user-dropdown-list">
-        <li className="user-dropdown-item" onClick={() => navigate('/profile')}>
+        <li className="user-dropdown-item" onClick={() => userInfo.id && navigate(`/user/${userInfo.id}`)}>
           Hồ sơ cá nhân
         </li>
         <li className="user-dropdown-item" onClick={() => navigate('/settingProfile')}>
