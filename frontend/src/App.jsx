@@ -6,6 +6,8 @@ import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
 import Settings from "./pages/settings/setting";
 import SettingProfile from "./pages/settings/profile";
+import PostDetail from "./pages/postDetail/PostDetail";
+import UserDetail from "./pages/userDetail/UserDetail";
 
 // Tạo sẵn các component trang ví dụ để không bị lỗi
 const Dashboard = () => <div className="component-container"></div>;
@@ -30,6 +32,8 @@ function App() {
             {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/settingProfile" element={<SettingProfile />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/user/:id" element={<UserDetail />} />
           </Route>
         </Route>
 
