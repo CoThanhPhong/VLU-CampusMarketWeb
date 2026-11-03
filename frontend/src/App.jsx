@@ -43,7 +43,7 @@ function App() {
             {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/settingProfile" element={<SettingProfile />} />
-            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/product/:id" element={<PostDetail />} />
             <Route path="/user/:id" element={<UserDetail />} />
           </Route>
         </Route>
