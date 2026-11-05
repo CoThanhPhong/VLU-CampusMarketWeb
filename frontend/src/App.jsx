@@ -4,8 +4,7 @@ import HomePage from "./pages/home/HomePage";
 import Login from "./pages/login/Login";
 import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
-import Settings from "./pages/settings/setting";
-import SettingProfile from "./pages/settings/profile";
+import Settings from "./pages/settings/settings";
 
 // 1. Import các trang bạn vừa làm (Nhớ kiểm tra lại đường dẫn cho chuẩn xác với máy bạn)
 import ProductList from "./pages/home/ProductList"; 
@@ -40,7 +39,6 @@ function App() {
             {/* B1: Thêm vào sidebar.jsx */}
             {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
-            <Route path="/settingProfile" element={<SettingProfile />} />
           </Route>
         </Route>
 

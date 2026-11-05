@@ -34,10 +34,8 @@ const Login = () => {
       // Lưu token vào localStorage (hoặc sessionStorage nếu "Ghi nhớ đăng nhập" không được chọn)
       if (rememberMe) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
       } else {
         sessionStorage.setItem('token', data.token);
-        sessionStorage.setItem('user', JSON.stringify(data.user));
       }
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công

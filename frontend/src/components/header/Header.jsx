@@ -6,19 +6,6 @@ const Header = ({ isOpen, setIsOpen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
-  // Lấy trực tiếp user mới nhất từ localStorage mỗi khi component render
-  const getUserFromStorage = () => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      return storedUser ? JSON.parse(storedUser) : sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const user = getUserFromStorage();
-  const userAvatar = user?.profile?.avatar || "";
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -47,23 +34,15 @@ const Header = ({ isOpen, setIsOpen }) => {
           </svg>
           <span className="badge"></span>
         </button>
-        
+
         <div className="user-menu-container" ref={userMenuRef}>
           <button 
             className={`icon-btn user-btn ${showUserMenu ? 'active' : ''}`}
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            {userAvatar !== "" ? (
-              <img 
-                src={userAvatar} 
-                alt="User Avatar" 
-                style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', display: 'block' }} 
-              />
-            ) : (
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            )}
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </button>
 
           <div className={`user-dropdown-wrapper ${showUserMenu ? 'active' : ''}`}>

@@ -54,15 +54,9 @@ const UserMenu = () => {
       </div>
       <hr className="dropdown-divider" />
       <ul className="user-dropdown-list">
-        <li className="user-dropdown-item" onClick={() => navigate('/profile')}>
-          Hồ sơ cá nhân
-        </li>
-        <li className="user-dropdown-item" onClick={() => navigate('/settingProfile')}>
-          Cài đặt hồ sơ
-        </li>
-        <li className="user-dropdown-item text-danger" onClick={logOut}>
-          Đăng xuất
-        </li>
+        <li className="user-dropdown-item">Hồ sơ cá nhân</li>
+        <li className="user-dropdown-item">Cài đặt tài khoản</li>
+        <li className="user-dropdown-item text-danger" onClick={logOut}>Đăng xuất</li>
       </ul>
     </div>
   );
