@@ -33,7 +33,6 @@ const verifyToken = (req, res, next) => {
 
 // 2. Middleware kiểm tra quyền Admin (ĐÃ TÁCH RA NGOÀI HOÀN TOÀN)
 const isAdmin = (req, res, next) => {
-  console.log('Thông tin user từ token:', req.user.role); // Debug thông tin user từ token
   if (req.user && req.user.role === 'admin') {
     next(); // Cho phép đi tiếp
   } else {

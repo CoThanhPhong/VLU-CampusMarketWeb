@@ -10,6 +10,9 @@ import SettingProfile from "./pages/settings/profile";
 // 1. Import các trang bạn vừa làm (Nhớ kiểm tra lại đường dẫn cho chuẩn xác với máy bạn)
 import ProductList from "./pages/home/ProductList"; 
 import CreateProductPage from "./pages/create/CreateProductPage";
+import CartPage from "./pages/cart/cartPage";
+import OrderListPage from "./pages/order/ordersPage";
+import CheckoutPage from "./components/checkout/checkoutPage";
 // import ProductDetailPage from "./pages/ProductDetailPage"; // Mở comment này ra khi bạn làm xong trang Chi tiết
 
 function App() {
@@ -32,6 +35,9 @@ function App() {
             
             {/* 3. Thay thế CreatePost giả bằng Form đăng bài của bạn */}
             <Route path="/create-post" element={<CreateProductPage />} />
+            <Route path="/orders" element={<OrderListPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
             
             {/* 4. Thêm sẵn Route cho trang Chi tiết sản phẩm (để click vào thẻ không bị lỗi) */}
             {/* <Route path="/product/:id" element={<ProductDetailPage />} /> */}
