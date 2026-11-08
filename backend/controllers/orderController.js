@@ -1,5 +1,5 @@
-const Order = require('../models/order.model');
-const Product = require('../models/product.model');
+const Order = require('../models/order.js');
+const Product = require('../models/product.js');
 
 // 1. Tạo đơn hàng mới (Dùng cho trang Checkout)
 exports.createOrder = async (req, res) => {

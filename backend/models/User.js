@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-
 const UserSchema = new mongoose.Schema({
-  mssv: { type: String, required: true, trim: true },
+  // Đã sửa required thành false để không bị lỗi đăng nhập
+  mssv: { type: String, required: false, trim: true }, 
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true },
   role: { type: String, enum:["admin", "user"], default: "user"},
   profile: { type: mongoose.Schema.ObjectId, ref: "userDetail"}
 }, { timestamps: true });
 
-// Middleware tự động hash password trước khi lưu vào database (Sửa lại chuẩn async/await)
+// Middleware tự động hash password trước khi lưu vào database
 UserSchema.pre('save', async function() {
   // Chỉ mã hóa nếu mật khẩu được tạo mới hoặc bị thay đổi
   if (!this.isModified('password')) return;
