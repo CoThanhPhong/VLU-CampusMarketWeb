@@ -1,0 +1,297 @@
+/* ==========================================================================
+   DETAIL PAGE & SHARED STYLES
+   ========================================================================== */
+.detail-page { width: min(1180px, 100%); margin: 0 auto; color: #172033; }
+.back-link { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; margin: 2px 0 18px; padding: 7px 0; }
+.back-link:hover { color: #2563eb; }
+
+.detail-state { min-height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #64748b; text-align: center; }
+.detail-state h2 { color: #172033; font-size: 22px; }
+.detail-state p { max-width: 520px; }
+.detail-error { background: #fff; border: 1px solid #e8edf4; border-radius: 18px; padding: 36px; }
+
+.card-surface { background: #fff; border: 1px solid #e8edf4; border-radius: 18px; box-shadow: 0 8px 28px rgba(15, 23, 42, .045); }
+
+/* ==========================================================================
+   USER PROFILE HEADER STYLING (CĂN CHỈNH CHUẨN XÁC)
+   ========================================================================== */
+.profile-cover.card-surface {
+  padding: 32px 24px;
+  background: #fff;
+  border: 1px solid #e8edf4;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .045);
+  margin-bottom: 22px;
+  position: relative;
+}
+
+/* Nút icon cây viết chỉnh sửa hồ sơ ở góc trên bên phải */
+.profile-settings-icon-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  transition: all 0.2s ease;
+  z-index: 10;
+  text-decoration: none;
+}
+
+.profile-settings-icon-btn:hover {
+  background-color: #f1f5f9;
+  color: #2563eb;
+  border-color: #cbd5e1;
+}
+
+.profile-main-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.profile-main-centered .profile-avatar {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #edf2f8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+}
+
+.profile-main-centered .profile-avatar-fallback {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 
+  SỬ DỤNG CSS GRID 3 CỘT: 
+  Cột 1 và Cột 3 đối xứng nhau để đảm bảo Cột 2 (Tên & VLU) nằm hoàn toàn ở chính giữa trục avatar,
+  đồng thời số bài đăng ở Cột 3 nằm ngang hàng bên phải mà không làm lệch tâm tên.
+*/
+.profile-info-flex-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 650px;
+  margin-top: 4px;
+}
+
+.profile-heading-centered {
+  grid-column: 2;
+  text-align: center;
+}
+
+.profile-heading-centered h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #172033;
+  margin: 0 0 4px 0;
+}
+
+.profile-heading-centered p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #748196;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Số bài đăng nằm ở cột thứ 3 (bên phải) */
+.profile-cover .profile-count {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 16px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  color: #166534;
+}
+
+.profile-cover .profile-count strong {
+  font-size: 18px;
+  color: #166534;
+  font-weight: 800;
+}
+
+.profile-cover .profile-count span {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   GRID & LISTINGS STYLING (MÀN HÌNH LỚN)
+   ========================================================================== */
+.profile-content-grid { 
+  display: grid; 
+  grid-template-columns: 310px minmax(0, 1fr); 
+  gap: 22px; 
+  margin-top: 22px; 
+  align-items: start; 
+}
+
+.profile-about { 
+  padding: 24px; 
+  background: #fff; 
+  border: 1px solid #e8edf4; 
+  border-radius: 18px; 
+  box-shadow: 0 8px 28px rgba(15, 23, 42, .045); 
+}
+
+.profile-about h2 { 
+  font-size: 18px; 
+  color: #1e293b; 
+  margin-bottom: 12px; 
+}
+
+.profile-about .profile-bio { 
+  color: #748196; 
+  line-height: 1.6; 
+  font-size: 13px; 
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 20px; 
+}
+
+.profile-contact { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 14px; 
+}
+
+.profile-contact div { 
+  display: flex; 
+  align-items: flex-start; 
+  gap: 10px; 
+  color: #748196; 
+  font-size: 13px; 
+  overflow-wrap: anywhere; 
+}
+
+.profile-contact svg { 
+  color: #6b8dbd; 
+  flex-shrink: 0; 
+  margin-top: 2px; 
+}
+
+.profile-listings { min-width: 0; }
+.listing-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 3px 0 16px; }
+.listing-heading h2 { margin-top: 5px; }
+.listing-search { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #e3e9f1; border-radius: 9px; padding: 9px 11px; color: #8b97a8; }
+.listing-search input { width: 170px; border: 0; outline: 0; font: inherit; font-size: 12px; color: #334155; }
+.profile-product-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.profile-product-card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; text-decoration: none; color: inherit; background: white; border: 1px solid #e8edf4; border-radius: 14px; transition: transform .18s ease, box-shadow .18s ease; }
+.profile-product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(15, 23, 42, .08); }
+.profile-product-card > img { width: 100%; height: 160px; object-fit: cover; background: #f3f6fa; }
+.profile-product-card .product-placeholder { min-height: 160px; border-radius: 0; }
+.profile-product-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 13px; }
+.profile-product-copy h3 { font-size: 14px; color: #263247; line-height: 1.4; }
+.profile-product-copy > strong { color: #2563eb; font-size: 16px; }
+.product-location { display: flex; align-items: center; gap: 5px; color: #8a96a8; font-size: 11px; }
+
+.empty-listings { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: white; border: 1px dashed #d6deea; border-radius: 14px; color: #94a3b8; text-align: center; padding: 25px; }
+.empty-listings strong { color: #475569; font-size: 14px; }
+.empty-listings span { font-size: 12px; }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (MÀN HÌNH NHỎ / MOBILE - DƯỚI 900px)
+   ========================================================================== */
+.profile-extra-details-mobile {
+  display: none; /* Mặc định ẩn trên màn hình lớn */
+}
+
+@media (max-width: 900px) { 
+  .profile-content-grid { grid-template-columns: 1fr; } 
+  .profile-content-grid .profile-about { display: none !important; } 
+  
+  /* Chuyển sang dạng dọc khi thu nhỏ màn hình */
+  .profile-info-flex-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .profile-cover .profile-count {
+    align-self: center;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 16px;
+  }
+
+  /* Cấu trúc đúng 3 dòng dưới avatar trên mobile */
+  .profile-extra-details-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #edf0f5;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .bio-line {
+    font-size: 13px;
+    color: #748196;
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+  }
+
+  .contact-line-2, .contact-line-3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: #748196;
+  }
+
+  .contact-line-2 span, .contact-line-3 span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot {
+    color: #cbd5e1;
+  }
+}
+
+@media (max-width: 600px) { 
+  .detail-page { width: 100%; padding: 0 12px; } 
+  .profile-product-grid { grid-template-columns: 1fr; } 
+}

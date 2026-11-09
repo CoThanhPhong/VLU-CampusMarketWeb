@@ -26,11 +26,21 @@ const Header = ({ isOpen, setIsOpen }) => {
 
   const fetchCartCount = async () => {
     try {
+<<<<<<< HEAD
       const response = await axios.get("/api/cart/g", { withCredentials: true });
+=======
+      const response = await axios.get("/api/cart/g", {
+        withCredentials: true,
+      });
+>>>>>>> feature/update-ui-sam
       if (response.data.success && Array.isArray(response.data.data)) {
         setUniqueItemCount(response.data.data.length);
       }
     } catch (error) {
+<<<<<<< HEAD
+=======
+      console.error("Lỗi lấy số lượng giỏ hàng cho header:", error);
+>>>>>>> feature/update-ui-sam
       try {
         const savedCart = sessionStorage.getItem("cartItems");
         setUniqueItemCount(savedCart ? JSON.parse(savedCart).length : 0);
@@ -43,11 +53,19 @@ const Header = ({ isOpen, setIsOpen }) => {
   useEffect(() => {
     fetchCartCount();
 
+<<<<<<< HEAD
     // Cập nhật state ngay khi có sự kiện userUpdated
+=======
+    // Hàm cập nhật lại thông tin user khi có sự kiện thay đổi hồ sơ
+>>>>>>> feature/update-ui-sam
     const handleUserUpdated = () => {
       setCurrentUser(getUserFromStorage());
     };
 
+<<<<<<< HEAD
+=======
+    // Lắng nghe các sự kiện giỏ hàng và user
+>>>>>>> feature/update-ui-sam
     const handleCartUpdated = () => {
       fetchCartCount();
     };

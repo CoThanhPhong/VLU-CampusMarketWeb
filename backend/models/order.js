@@ -32,7 +32,6 @@ const OrderSchema = new mongoose.Schema({
   shippingInfo: {
     fullName: { type: String, required: true },
     phone: { type: String, required: true },
-    address: { type: String, required: true },
     local: { 
       type: String, 
       enum: ["Cơ sở 1", "Cơ sở 2", "Cơ sở 3"], 

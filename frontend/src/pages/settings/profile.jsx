@@ -62,7 +62,7 @@ const SettingProfile = () => {
     }
   };
 
- const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
@@ -74,9 +74,16 @@ const SettingProfile = () => {
         if (resData.success) {
           setMessage({ type: 'success', text: '🎉 ' + (resData.message || 'Cập nhật hồ sơ thành công!') });
           
-          // 1. Tạo object user mới chuẩn hóa dữ liệu
+          // Tự động ẩn toast thông báo sau 4 giây
+          setTimeout(() => {
+            setMessage({ type: '', text: '' });
+          }, 4000);
+
+          // 1. Tạo object user mới cập nhật đầy đủ thông tin cả bên ngoài lẫn trong profile
           const updatedUser = {
             ...currentUser,
+            mssv: formData.mssv,
+            email: formData.email,
             profile: {
               ...(currentUser.profile || {}),
               ...formData.profile
@@ -87,12 +94,11 @@ const SettingProfile = () => {
           if (localStorage.getItem('user')) localStorage.setItem('user', userStr);
           if (sessionStorage.getItem('user')) sessionStorage.setItem('user', userStr);
           
-          // Nút fallback nếu cả 2 chưa có
           if (!localStorage.getItem('user') && !sessionStorage.getItem('user')) {
             sessionStorage.setItem('user', userStr);
           }
 
-          // 3. Phát sự kiện toàn hệ thống
+          // 3. Phát sự kiện toàn hệ thống để Header và các component khác nhận biết cập nhật mới
           window.dispatchEvent(new Event('userUpdated'));
 
         } else {
@@ -106,12 +112,41 @@ const SettingProfile = () => {
       .finally(() => setLoading(false));
   };
 
-  // Ảnh dự phòng khi ô input avatar trống hoặc link ảnh ngoài bị lỗi/chặn CORS
   const fallbackAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(formData.profile.name || 'User') + '&background=0D8ABC&color=fff&size=100';
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: '"Inter", "Segoe UI", sans-serif', position: 'relative', paddingBottom: '40px' }}>
       
+      {/* Toast Notification nổi ở góc phải màn hình, luôn hiển thị trong tầm mắt người dùng */}
+      {message.text && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 9999,
+          padding: '16px 20px',
+          borderRadius: '12px',
+          fontSize: '15px',
+          fontWeight: '500',
+          backgroundColor: message.type === 'success' ? '#f0fdf4' : '#fef2f2',
+          color: message.type === 'success' ? '#166534' : '#991b1b',
+          border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <span>{message.text}</span>
+          <button 
+            onClick={() => setMessage({ type: '', text: '' })} 
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'inherit', opacity: 0.7 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div style={{ backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)' }}>
         
         {/* Tiêu đề */}
@@ -124,13 +159,6 @@ const SettingProfile = () => {
             <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>Quản lý thông tin hiển thị và phương thức liên hệ của bạn.</p>
           </div>
         </div>
-
-        {/* Thông báo trạng thái */}
-        {message.text && (
-          <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '15px', fontWeight: '500', backgroundColor: message.type === 'success' ? '#f0fdf4' : '#fef2f2', color: message.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
-            {message.text}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           
