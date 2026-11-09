@@ -19,7 +19,7 @@ const getCurrentUser = async (req, res) => {
       success: true,
       data: {
         id: user._id,
-        name: user.name,
+        mssv: user.mssv,
         email: user.email,
         role: user.role,
         profile: user.profile // Chứa thông tin chi tiết (mssv, phone, avatar,...)

@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/verifyToken');
-const componentLogger = require('../middleware/componentLogger');
 const Product = require('../models/product');
 
 // Validate thông tin checkout và kiểm tra tồn kho trước khi đặt hàng
-router.post('/validate', verifyToken, componentLogger('CheckoutPage'), async (req, res) => {
+router.post('/validate', verifyToken, async (req, res) => {
   try {
     const { orderItems } = req.body;
     

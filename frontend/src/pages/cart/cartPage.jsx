@@ -4,36 +4,93 @@ import { useNavigate } from 'react-router-dom';
 export default function CartPage() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // 1. Hàm gọi API lấy giỏ hàng từ Server
+  const fetchCartFromAPI = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/cart/g', {
+        method: 'GET',
+        credentials: 'include', // Gửi kèm Cookie/Session
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCartItems(data.data);
+        // Lưu lại vào sessionStorage
+        sessionStorage.setItem('cartItems', JSON.stringify(data.data));
+      }
+    } catch (error) {
+      console.error('Lỗi kết nối API:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Hàm đồng bộ giỏ hàng lên Server khi CRUD (tăng giảm, xóa)
+  const syncCartToServer = async (updatedItems) => {
+    try {
+      await fetch('/api/cart/u', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ items: updatedItems }),
+      });
+    } catch (error) {
+      console.error('Lỗi đồng bộ giỏ hàng lên server:', error);
+    }
+  };
+
+  // 3. Xử lý khi load trang hoặc bấm F5
   useEffect(() => {
+    // Kiểm tra xem user có vừa bấm F5 (reload) trình duyệt hay không
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+
     const savedCart = sessionStorage.getItem('cartItems');
-    if (savedCart) {
+
+    if (isReload || !savedCart) {
+      // TRƯỜNG HỢP 1: Vừa bấm F5 hoặc chưa có dữ liệu trong sessionStorage -> Gọi API lấy mới từ server
+      fetchCartFromAPI();
+      window.dispatchEvent(new Event('cartUpdated'));
+    } else {
+      // TRƯỜNG HỢP 2: Chuyển trang nội bộ (Client-side routing) -> Dùng luôn data sẵn có trong sessionStorage cho mượt
       setCartItems(JSON.parse(savedCart));
+      window.dispatchEvent(new Event('cartUpdated'));
     }
   }, []);
 
+  // Thay đổi số lượng (CRUD)
   const handleQuantityChange = (id, delta) => {
     setCartItems(prev => {
       const updated = prev.map(item => {
         if (item._id === id) {
           const newQty = item.quantity + delta;
-          if (newQty > 0 && newQty <= item.amount) {
-            return { ...item, quantity: newQty };
+          if (newQty >= 0 && newQty <= item.amount) {
+            if (newQty === 0) {
+            handleRemoveItem(item._id);
           }
+            window.dispatchEvent(new Event('cartUpdated'));
+            return { ...item, quantity: newQty };
+          } 
         }
         return item;
       });
-      sessionStorage.setItem('cartItems', JSON.stringify(updated));
+      syncCartToServer(updated); // Đồng bộ ngầm lên server
       return updated;
     });
   };
 
+  // Xóa sản phẩm (CRUD)
   const handleRemoveItem = (id) => {
     setCartItems(prev => {
       const updated = prev.filter(item => item._id !== id);
       sessionStorage.setItem('cartItems', JSON.stringify(updated));
+      syncCartToServer(updated); // Đồng bộ ngầm lên server
       return updated;
     });
+    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -46,7 +103,9 @@ export default function CartPage() {
 
   return (
     <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', color: '#333' }}>Giỏ Hàng Của Bạn</h2>
+      <div style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
+        <h2 style={{ margin: 0, color: '#333' }}>Giỏ Hàng Của Bạn {loading && <span style={{fontSize: '14px', color: '#888'}}>(Đang đồng bộ từ server...)</span>}</h2>
+      </div>
       
       {cartItems.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
