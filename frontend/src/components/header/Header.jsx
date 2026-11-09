@@ -31,18 +31,14 @@ const Header = ({ isOpen, setIsOpen }) => {
   // Hàm gọi API lấy số lượng giỏ hàng từ Database
   const fetchCartCount = async () => {
     try {
-      // Chỉ gọi API khi user đã đăng nhập (có token/session)
       const response = await axios.get("/api/cart/g", {
         withCredentials: true,
       });
       if (response.data.success && Array.isArray(response.data.data)) {
-        // Đếm tổng số lượng loại sản phẩm hoặc tổng số lượng item tùy ý bạn
-        // Ở đây đếm số lượng loại sản phẩm khác nhau (độ dài mảng)
         setUniqueItemCount(response.data.data.length);
       }
     } catch (error) {
       console.error("Lỗi lấy số lượng giỏ hàng cho header:", error);
-      // Fallback xuống sessionStorage nếu gọi API lỗi
       try {
         const savedCart = sessionStorage.getItem("cartItems");
         if (savedCart) {
@@ -60,15 +56,22 @@ const Header = ({ isOpen, setIsOpen }) => {
   useEffect(() => {
     fetchCartCount();
 
-    // Lắng nghe sự kiện tùy chỉnh khi giỏ hàng thay đổi (ví dụ: CRUD trong CartPage)
+    // Hàm cập nhật lại thông tin user khi có sự kiện thay đổi hồ sơ
+    const handleUserUpdated = () => {
+      setCurrentUser(getUserFromStorage());
+    };
+
+    // Lắng nghe các sự kiện giỏ hàng và user
     const handleCartUpdated = () => {
       fetchCartCount();
     };
 
+    window.addEventListener("userUpdated", handleUserUpdated);
     window.addEventListener("cartUpdated", handleCartUpdated);
     window.addEventListener("storage", handleCartUpdated);
 
     return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
       window.removeEventListener("cartUpdated", handleCartUpdated);
       window.removeEventListener("storage", handleCartUpdated);
     };

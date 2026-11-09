@@ -79,9 +79,11 @@ const SettingProfile = () => {
             setMessage({ type: '', text: '' });
           }, 4000);
 
-          // 1. Tạo object user mới chuẩn hóa dữ liệu
+          // 1. Tạo object user mới cập nhật đầy đủ thông tin cả bên ngoài lẫn trong profile
           const updatedUser = {
             ...currentUser,
+            mssv: formData.mssv,
+            email: formData.email,
             profile: {
               ...(currentUser.profile || {}),
               ...formData.profile
@@ -96,7 +98,7 @@ const SettingProfile = () => {
             sessionStorage.setItem('user', userStr);
           }
 
-          // 3. Phát sự kiện toàn hệ thống
+          // 3. Phát sự kiện toàn hệ thống để Header và các component khác nhận biết cập nhật mới
           window.dispatchEvent(new Event('userUpdated'));
 
         } else {
