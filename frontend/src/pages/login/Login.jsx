@@ -35,6 +35,11 @@ const Login = () => {
 
       if (rememberMe) {
         localStorage.setItem('user', JSON.stringify(data.user));
+<<<<<<< HEAD
+=======
+      } else {
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+>>>>>>> feature/update-ui-sam
       }
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công
