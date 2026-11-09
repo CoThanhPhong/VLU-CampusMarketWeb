@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const UserMenu = () => {
   const navigate = useNavigate();
@@ -10,56 +11,71 @@ const UserMenu = () => {
     id: ''
   });
 
-  // Gọi API lấy thông tin user khi component được render
+  // Lấy thông tin user từ localStorage hoặc sessionStorage khi component mount
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) return;
+    try {
+      // Ưu tiên lấy từ localStorage, nếu không có sẽ kiểm tra ở sessionStorage
+      const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
 
-        const response = await fetch('/api/auth/profile', {
-          headers: { Authorization: `Bearer ${token}` }
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        
+        // Hỗ trợ linh hoạt các tên property khác nhau của object user
+        setUserInfo({
+          name: parsedUser.profile.name || 'Người dùng',
+          email: parsedUser.email || '',
+          avatar: parsedUser.profile.avatar || ''
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || 'Không thể lấy hồ sơ');
-
-        if (result.success) {
-          const { name, email, profile } = result.data;
-          setUserInfo({
-            name: name || profile?.name || 'Người dùng',
-            email: email || profile?.email || '',
-            avatar: profile?.avatar || '',
-            id: result.data.id || result.data._id || ''
-          });
-        }
-      } catch (error) {
-        console.error('Không thể lấy thông tin profile:', error);
       }
-    };
-
-    fetchUserProfile();
+    } catch (error) {
+      console.error('Không thể đọc thông tin user từ storage:', error);
+      setUserInfo({
+        name: 'Người dùng',
+        email: '',
+        avatar: ''
+      });
+    }
   }, []);
 
-  const logOut = () => {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-    navigate('/login', { replace: true });
+  const logOut = async () => {
+    try {
+      // 1. Gọi API logout phía Backend để xóa Cookie (nếu có sử dụng cookie-parser)
+      
+      await axios.post('/api/auth/logout', {}, {});
+    } catch (error) {
+      console.error('Lỗi khi gọi API logout:', error);
+    } finally {
+      // 2. Xóa sạch thông tin lưu trữ ở trình duyệt dù gọi API thành công hay thất bại
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+
+      // 3. Chuyển hướng về trang đăng nhập
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
     <div className="user-dropdown">
       <div className="user-dropdown-header">
-        {/* Hiển thị tên và email động từ API */}
-        <p className="user-name">{userInfo.name}</p>
-        <p className="user-email">{userInfo.email}</p>
+        {/* Hiển thị tên (có hỗ trợ chống tràn chữ) */}
+        <p className="user-name" title={userInfo.name}>
+          {userInfo.name}
+        </p>
+        
+        {/* Hiển thị email (tự động cắt thành ... khi quá dài) */}
+        <p className="user-email" title={userInfo.email}>
+          {userInfo.email}
+        </p>
       </div>
+
       <hr className="dropdown-divider" />
+
       <ul className="user-dropdown-list">
         <li className="user-dropdown-item" onClick={() => userInfo.id && navigate(`/user/${userInfo.id}`)}>
           Hồ sơ cá nhân
         </li>
         <li className="user-dropdown-item" onClick={() => navigate('/settingProfile')}>
-          Cài đặt hồ sơ
+          Chỉnh sửa hồ sơ
         </li>
         <li className="user-dropdown-item text-danger" onClick={logOut}>
           Đăng xuất

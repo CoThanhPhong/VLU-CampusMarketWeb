@@ -6,7 +6,5 @@ headers:
     value: ""
     disabled: true
 auth:
-  type: bearer
-  credentials:
-    token: "{{token}}"
+  type: noauth
 order: 2000

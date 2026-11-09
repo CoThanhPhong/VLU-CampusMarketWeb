@@ -19,7 +19,7 @@ const getCurrentUser = async (req, res) => {
       success: true,
       data: {
         id: user._id,
-        name: user.name,
+        mssv: user.mssv,
         email: user.email,
         role: user.role,
         profile: user.profile // Chứa thông tin chi tiết (mssv, phone, avatar,...)
@@ -95,8 +95,62 @@ const getUserById = async (req, res) => {
   }
 };
 
+// 4. Cập nhật thông tin profile của chính user đang đăng nhập
+const updateCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, phone, bio, avatar } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng!' });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (bio !== undefined) updateData.bio = bio;
+    if (avatar !== undefined) updateData.avatar = avatar;
+
+    let updatedProfile;
+    if (user.profile) {
+      // Cập nhật UserDetail đã tồn tại
+      updatedProfile = await UserDetail.findByIdAndUpdate(
+        user.profile,
+        { $set: updateData },
+        { returnDocument: true, runValidators: true }
+      );
+    } else {
+      // Nếu chưa có thì tạo mới và gán ID vào user
+      updatedProfile = await UserDetail.create(updateData);
+      user.profile = updatedProfile._id;
+    }
+
+    // 💡 SỬA LỖI TẠI ĐÂY:
+    // 1. Gán lại object profile đã cập nhật vào user để trả về đầy đủ cho Frontend
+    user.profile = updatedProfile;
+
+    // 2. Chuyển user sang dạng Object thuần và xóa mật khẩu bảo mật trước khi gửi response
+    const userObject = user.toObject();
+    delete userObject.password;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật hồ sơ thành công!',
+      data: {
+        user: userObject
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi cập nhật thông tin user:', error.message);
+    return res.status(500).json({ success: false, message: 'Lỗi server nội bộ!' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
-  getCurrentUser
+  getCurrentUser,
+  updateCurrentUser
 };
