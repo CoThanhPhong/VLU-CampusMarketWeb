@@ -19,6 +19,55 @@ export default function ProductCard({ product }) {
   const authorId = product?.author?._id || product?.author || '#';
   const authorName = product?.author?.name || 'Thành viên VLU';
 
+  // [ĐÃ FIX] Lấy ảnh chính xác từ mọi định dạng (Mảng img, Chuỗi đơn, hoặc mảng images)
+  const getProductImage = () => {
+    // 1. Kiểm tra nếu product.img là mảng
+    if (Array.isArray(product?.img) && product.img.length > 0) {
+      const firstValidImg = product.img.find(img => typeof img === 'string' && img.trim() !== '');
+      if (firstValidImg) return firstValidImg;
+    }
+    
+    // 2. Kiểm tra nếu product.img là chuỗi đơn
+    if (typeof product?.img === 'string' && product.img.trim() !== '') {
+      return product.img;
+    }
+
+    // 3. Dự phòng trường hợp lưu ở trường product.images
+    if (Array.isArray(product?.images) && product.images.length > 0) {
+      const firstValidImages = product.images.find(img => typeof img === 'string' && img.trim() !== '');
+      if (firstValidImages) return firstValidImages;
+    }
+
+    // Fallback mặc định nếu không có ảnh nào
+    return 'https://via.placeholder.com/300x170?text=No+Image';
+  };
+
+  // Hàm chuyển đổi thời gian sang dạng tương đối (vừa xong, x phút trước, x giờ trước...)
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return 'Gần đây';
+    
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 60) {
+      return 'Vừa xong';
+    }
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} phút trước`;
+    }
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} giờ trước`;
+    }
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} ngày trước`;
+    }
+    return past.toLocaleDateString('vi-VN');
+  };
+
   // Hàm xử lý tăng giảm số lượng (không vượt quá số lượng trong kho)
   const handleDecrease = (e) => { 
     e.stopPropagation(); 
@@ -67,7 +116,7 @@ export default function ProductCard({ product }) {
         {/* HÌNH ẢNH SẢN PHẨM VÀ CÁC NHÃN */}
         <div style={{ position: 'relative', width: '100%', height: '170px', backgroundColor: '#f1f5f9' }}>
           <img 
-            src={product?.img || 'https://via.placeholder.com/300x170?text=No+Image'} 
+            src={getProductImage()} 
             alt={product?.name} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             onError={(e) => { e.target.src = 'https://via.placeholder.com/300x170?text=Lỗi+Ảnh'; }}
@@ -94,29 +143,34 @@ export default function ProductCard({ product }) {
 
         {/* THÔNG TIN CHI TIẾT SẢN PHẨM */}
         <div style={{ padding: '12px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: '0 0 6px 0', height: '40px', overflow: 'hidden' }}>
+          {/* Tên sản phẩm dùng thẻ div để không bị khoảng cách lớn với giá tiền */}
+          <div style={{ 
+            fontSize: '15px', fontWeight: '600', color: '#0f172a', 
+            margin: '0 0 4px 0', lineHeight: '1.3', 
+            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' 
+          }}>
             {product?.name}
-          </h3>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: '#dc2626', marginBottom: '6px' }}>
             {product?.price ? product.price.toLocaleString('vi-VN') : 0} <span style={{ fontSize: '12px', fontWeight: '400', color: '#64748b' }}>VNĐ</span>
           </div>
           
-        {/* Thông tin Người đăng */}
-        <div 
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            if (authorId === '#') {
-              alert('Bài viết cũ này chưa được cập nhật dữ liệu người đăng!');
-            } else {
-              navigate(`/user/${authorId}`); 
-            }
-          }}
-          style={{ fontSize: '13px', color: '#2563eb', cursor: 'pointer', marginTop: '6px', marginBottom: '12px' }}
-        >
-          Người đăng: <b>{authorName}</b>
-        </div>
+          {/* Thông tin Người đăng */}
+          <div 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (authorId === '#') {
+                alert('Bài viết cũ này chưa được cập nhật dữ liệu người đăng!');
+              } else {
+                navigate(`/user/${authorId}`); 
+              }
+            }}
+            style={{ fontSize: '13px', color: '#2563eb', cursor: 'pointer', marginTop: '2px', marginBottom: '8px' }}
+          >
+            Người đăng: <b>{authorName}</b>
+          </div>
 
-          {/* Hàng hiển thị Vị trí và Ngày đăng (Giữ nguyên từ bản cũ) */}
+          {/* Hàng hiển thị Vị trí và Thời gian đăng tương đối */}
           <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -127,17 +181,15 @@ export default function ProductCard({ product }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <span>{product?.createdAt ? new Date(product.createdAt).toLocaleDateString('vi-VN') : 'Gần đây'}</span>
+              <span>{formatTimeAgo(product?.createdAt || product?.startDate)}</span>
             </div>
           </div>
 
-          {/* Bộ chọn số lượng mua (UI Mới) */}
-          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px' }}>
+          {/* Bộ chọn số lượng mua */}
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#f8fafc' }}>
               <button onClick={handleDecrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
               <span style={{ fontSize: '13px', padding: '0 8px', fontWeight: '600' }}>{qty}</span>
