@@ -70,7 +70,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto' }}>
       <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', color: '#333' }}>Xác Nhận Đơn Hàng & Thanh Toán</h2>
       
       <form onSubmit={handleOrderSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>

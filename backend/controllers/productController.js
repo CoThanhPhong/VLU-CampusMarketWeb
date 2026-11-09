@@ -5,28 +5,35 @@ const createProduct = async (req, res) => {
   try {
     const data = req.body;
     
-    // Nếu client gửi lên một mảng đối tượng sản phẩm hoặc một đối tượng đơn lẻ
     if (Array.isArray(data)) {
-      const newProducts = await Product.insertMany(data);
+      const formattedData = data.map(item => ({
+        ...item,
+        status: item.status || 'Chờ duyệt',
+        startDate: item.startDate || new Date().toISOString()
+      }));
+      const newProducts = await Product.insertMany(formattedData);
       return res.status(201).json({
         success: true,
         message: `Tạo ${newProducts.length} sản phẩm thành công`,
         data: newProducts
       });
     } else {
-      // Trường hợp tạo mới hoặc cập nhật cộng dồn đơn lẻ từ form
-      // Kiểm tra nếu có _id thì tiến hành update/upsert, nếu không thì tạo mới
       let savedProduct;
       if (data._id) {
-        savedProduct = await Product.findByIdAndUpdate(data._id, data, { new: true, runValidators: true, upsert: true });
+        savedProduct = await Product.findByIdAndUpdate(data._id, data, { returnDocument: 'after', runValidators: true, upsert: true });
       } else {
-        const newProduct = new Product(data);
+        const productData = {
+          ...data,
+          status: data.status || 'Chờ duyệt',
+          startDate: new Date().toISOString()
+        };
+        const newProduct = new Product(productData);
         savedProduct = await newProduct.save();
       }
 
       return res.status(201).json({
         success: true,
-        message: 'Lưu sản phẩm thành công',
+        message: 'Đăng bài thành công, đang chờ Admin duyệt!',
         data: savedProduct
       });
     }
@@ -49,31 +56,18 @@ const getProductById = async (req, res) => {
       const limit = parseInt(req.query.limit) || 20;
       const skip = (page - 1) * limit;
 
-      // Xây dựng điều kiện lọc (Query Filter) động
-      let filter = {
-        amount: { $gt: 0 },          // Chỉ lấy sản phẩm còn số lượng > 0
-        status: { $ne: 'Hết hàng' }  // Loại bỏ sản phẩm hết hàng
-      };
+      let filter = {};
+      const isAdminRequest = req.query.isAdmin === 'true';
 
-      // Nếu có từ khóa tìm kiếm theo tên
-      if (req.query.search && req.query.search.trim() !== '') {
-        filter.name = { $regex: req.query.search.trim(), $options: 'i' };
+      if (!isAdminRequest) {
+        filter.amount = { $gt: 0 };
+        filter.status = { $in: ['Còn hàng', 'Đã duyệt'] };
+        // ... các bộ lọc tìm kiếm khác nếu có
       }
 
-      // Nếu có lọc theo loại thiết bị
-      if (req.query.category && req.query.category !== 'all') {
-        filter.deviceType = req.query.category;
-      }
-
-      // Nếu có lọc theo cơ sở
-      if (req.query.local && req.query.local !== 'all') {
-        filter.local = req.query.local;
-      }
-
-      // Đếm tổng số sản phẩm thỏa mãn điều kiện lọc
+      // Đếm tổng số bản ghi thực tế trong database khớp với điều kiện
       totalProducts = await Product.countDocuments(filter);
 
-      // Truy vấn sản phẩm theo điều kiện, phân trang và sắp xếp mới nhất
       product = await Product.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -87,13 +81,12 @@ const getProductById = async (req, res) => {
         success: true, 
         currentPage: page,
         totalPages: Math.ceil(totalProducts / limit) || 1,
-        totalProducts: totalProducts,
+        totalProducts: totalProducts, // Tổng số lượng thực tế (ví dụ: 59)
         count: product.length, 
         data: product 
       });
 
     } else {
-      // Trường hợp lấy chi tiết 1 sản phẩm theo _id
       product = await Product.findById(req.body._id).populate({
         path: 'author',
         populate: { path: 'profile' }
@@ -117,7 +110,7 @@ const updateProduct = async (req, res) => {
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm để cập nhật' });
@@ -132,17 +125,50 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// 4. DELETE: Xóa sản phẩm theo ID
+// 4. UPDATE STATUS (ADMIN DUYỆT / TỪ CHỐI BÀI ĐĂNG)
+const updateProductStatus = async (req, res) => {
+  try {
+    const { productId, status } = req.body; 
+    const newStatus = status === 'Đã duyệt' ? 'Còn hàng' : 'Bị từ chối';
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { status: newStatus },
+      { returnDocument: 'after' }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Đã ${status} bài viết thành công!`, 
+      data: updatedProduct 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 5. DELETE: Xóa sản phẩm theo ID
 const deleteProduct = async (req, res) => {
   try {
-    const productId = req.body._id || req.params.id;
+    // Hỗ trợ lấy id từ cả body.productId lẫn body._id hoặc params
+    const productId = req.body.productId || req.body._id || req.params.id;
+    
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Thiếu ID sản phẩm cần xóa' });
+    }
+
     const deletedProduct = await Product.findByIdAndDelete(productId);
     if (!deletedProduct) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm để xóa' });
     }
-    res.status(200).json({ success: true, message: `Xóa sản phẩm thành công` });
+    
+    return res.status(200).json({ success: true, message: `Xóa sản phẩm thành công` });
   } catch (error) {
-    res.status(500).json({ success: false, message: `Xóa sản phẩm thất bại! Lỗi: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Xóa sản phẩm thất bại! Lỗi: ${error.message}` });
   }
 };
 
@@ -150,5 +176,6 @@ module.exports = {
   createProduct,
   getProductById,
   updateProduct,
+  updateProductStatus,
   deleteProduct
 };

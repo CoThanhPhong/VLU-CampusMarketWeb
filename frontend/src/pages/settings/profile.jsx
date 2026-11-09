@@ -115,7 +115,7 @@ const SettingProfile = () => {
   const fallbackAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(formData.profile.name || 'User') + '&background=0D8ABC&color=fff&size=100';
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', fontFamily: '"Inter", "Segoe UI", sans-serif', position: 'relative', paddingBottom: '40px' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', paddingBottom: '40px' }}>
       
       {/* Toast Notification nổi ở góc phải màn hình, luôn hiển thị trong tầm mắt người dùng */}
       {message.text && (

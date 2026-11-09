@@ -4,7 +4,8 @@ const {
   createProduct,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  updateProductStatus
 } = require('../controllers/productController');
 
 // Routes định nghĩa tại tiền tố /api/products
@@ -16,5 +17,6 @@ router.route('/u') // Thêm tiền tố /update để tránh xung đột với c
   .put(updateProduct);
 router.route('/d') // Thêm tiền tố /delete để tránh xung đột với các route khác
   .delete(deleteProduct);
-
+router.route('/update-status') // Thêm route để cập nhật trạng thái sản phẩm
+  .put(updateProductStatus);
 module.exports = router;

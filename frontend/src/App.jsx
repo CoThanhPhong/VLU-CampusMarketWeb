@@ -15,6 +15,7 @@ import OrderListPage from "./pages/order/ordersPage";
 import CheckoutPage from "./components/checkout/checkoutPage";
 import ProductList from "./pages/home/ProductList"; 
 import CreateProductPage from "./pages/create/CreateProductPage";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
 
 function App() {
   return (
@@ -39,17 +40,11 @@ function App() {
             <Route path="/orders" element={<OrderListPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            
-            {/* 4. Thêm sẵn Route cho trang Chi tiết sản phẩm (để click vào thẻ không bị lỗi) */}
-            {/* <Route path="/product/:id" element={<ProductDetailPage />} /> */}
-            
-            {/* Ví dụ tạo pages/settings/settings.jsx */}
-            {/* B1: Thêm vào sidebar.jsx */}
-            {/* B2: Thêm vào Route như bên dưới */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/settingProfile" element={<SettingProfile />} />
             <Route path="/product/:id" element={<PostDetail />} />
             <Route path="/user/:id" element={<UserDetail />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
         </Route>
 

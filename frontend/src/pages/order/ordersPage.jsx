@@ -54,7 +54,7 @@ export default function OrderListPage() {
   if (error) return <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}><p>{error}</p></div>;
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
       <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', color: '#333' }}>Lịch Sử Đơn Hàng Của Tôi</h2>
       
       {orders.length === 0 ? (

@@ -34,7 +34,7 @@ export default function HomePage() {
   }, [products, searchTerm, selectedCategory, selectedLocal]);
 
   return (
-    <div style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', paddingBottom: '40px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', paddingBottom: '40px' }}>
       
       {/* HEADER BANNER */}
       <div style={{

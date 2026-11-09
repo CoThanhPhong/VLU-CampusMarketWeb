@@ -99,7 +99,7 @@ export default function CartPage() {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
       
       {/* Nút quay lại góc trái phía trên (giống phong cách trang profile) */}
       <button 

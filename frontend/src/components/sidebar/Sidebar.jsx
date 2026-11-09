@@ -1,16 +1,59 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Kiểm tra quyền admin của người dùng hiện tại khi Sidebar mount
+  useEffect(() => {
+    try {
+      const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        const userRole = parsedUser.role || parsedUser.profile?.role;
+        const isUserAdmin = userRole === 'admin' || parsedUser.isAdmin === true;
+        setIsAdmin(isUserAdmin);
+      }
+    } catch (err) {
+      console.error("Lỗi kiểm tra quyền admin cho sidebar:", err);
+    }
+  }, []);
 
   // Kiểm tra nếu đường dẫn hiện tại là "/" hoặc "/home" thì active Trang chủ
   const isHomeActive = location.pathname === "/" || location.pathname === "/home";
 
   return (
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`}>
+      
+      {/* CHỈ HIỂN THỊ MỤC TRANG ADMIN NẾU USER LÀ ADMIN */}
+      {isAdmin && (
+        <NavLink
+          to="/admin"
+          end
+          className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+        >
+          {/* Icon Khiên bảo vệ/Quản trị (Shield) chuyên nghiệp cho Admin */}
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+            />
+          </svg>
+          <span>Trang Admin</span>
+        </NavLink>
+      )}
+
       <NavLink
-        to="/"
+        to="/home"
         end
         className={() => `nav-item ${isHomeActive ? "active" : ""}`}
       >

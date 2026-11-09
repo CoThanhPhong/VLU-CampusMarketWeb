@@ -8,7 +8,7 @@ const ProductSchema = new mongoose.Schema({
   local: { type: String, enum:["Cơ sở 1", "Cơ sở 2", "Cơ sở 3"], required: true },
   img: { type: [String], required: true },
   startDate: { type: Date, required: true },
-  status: {type: String, enum: ["Còn hàng", "Hết hàng"], default: "Còn hàng"},
+  status: {type: String, enum: ["Còn hàng", "Hết hàng", "Chờ duyệt", "Bị từ chối"], default: "Chờ duyệt"},
   deviceType: { type: String, enum: ["mobile", "tablet", "laptop", "mac"], required:true },
   endDate: { type: Date, required: false },
   author: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
