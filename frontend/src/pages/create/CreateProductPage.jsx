@@ -7,13 +7,12 @@ export default function CreateProductPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [existingProducts, setExistingProducts] = useState([]);
 
-  // 1. Lấy chuẩn xác ID người dùng hiện tại từ sessionStorage hoặc localStorage
+  // Lấy chuẩn xác ID người dùng hiện tại từ sessionStorage hoặc localStorage
   const getCurrentUserId = () => {
     try {
       const authData = sessionStorage.getItem('user') || localStorage.getItem('user');
       if (authData) {
         const parsed = JSON.parse(authData);
-        // Hỗ trợ quét qua nhiều cấu trúc lưu trữ user khác nhau
         return parsed._id || parsed.id || parsed.profile?.id || parsed.profile?._id || '';
       }
     } catch (e) {
@@ -31,16 +30,15 @@ export default function CreateProductPage() {
     displayPrice: '',
     amount: 1, 
     local: 'Cơ sở 1',
-    img: '', 
-    images: [{ type: 'url', value: '' }], 
+    // Khởi tạo mảng img chứa tối đa 5 ảnh (mỗi phần tử có type và value)
+    imgInputs: [{ type: 'url', value: '' }], 
     status: 'Còn hàng', 
     deviceType: 'mobile',
-    author: currentUserId // Gán đúng ID người dùng hiện tại làm author
+    author: currentUserId 
   });
 
-  // Tải trước danh sách sản phẩm hiện có từ API để kiểm tra trùng lặp theo author và tên sản phẩm
+  // Tải danh sách sản phẩm hiện có để kiểm tra trùng lặp theo author và tên sản phẩm
   useEffect(() => {
-    // Nếu chưa đăng nhập hoặc không có ID, có thể điều hướng về trang login nếu cần
     if (!currentUserId) {
       console.warn("Chưa tìm thấy thông tin đăng nhập của người dùng.");
     }
@@ -59,7 +57,6 @@ export default function CreateProductPage() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Xử lý định dạng cho ô Giá bán (format dấu chấm khi > 1000, không âm)
   const handlePriceChange = (e) => {
     let rawValue = e.target.value.replace(/\D/g, '');
     
@@ -79,19 +76,15 @@ export default function CreateProductPage() {
   };
 
   const handleImageTypeChange = (index, newType) => {
-    const newImages = [...formData.images];
-    newImages[index] = { type: newType, value: '' };
-    setFormData({ ...formData, images: newImages });
+    const newInputs = [...formData.imgInputs];
+    newInputs[index] = { type: newType, value: '' };
+    setFormData({ ...formData, imgInputs: newInputs });
   };
 
   const handleImageValueChange = (index, val) => {
-    const newImages = [...formData.images];
-    newImages[index].value = val;
-    setFormData({
-      ...formData,
-      images: newImages,
-      img: newImages[0]?.value || ''
-    });
+    const newInputs = [...formData.imgInputs];
+    newInputs[index].value = val;
+    setFormData({ ...formData, imgInputs: newInputs });
   };
 
   const handleImageFileUpload = (index, e) => {
@@ -99,41 +92,36 @@ export default function CreateProductPage() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Kích thước file ảnh quá lớn! Vui lòng chọn ảnh dưới 2MB.');
+      alert('Kích thước file ảnh quá lớn! Vول lòng chọn ảnh dưới 2MB.');
       return;
     }
 
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result;
-      const newImages = [...formData.images];
-      newImages[index].value = base64String;
-      setFormData({
-        ...formData,
-        images: newImages,
-        img: newImages[0]?.value || ''
-      });
+      const newInputs = [...formData.imgInputs];
+      newInputs[index].value = base64String;
+      setFormData({ ...formData, imgInputs: newInputs });
     };
     reader.readAsDataURL(file);
   };
 
   const handleAddImageField = () => {
-    if (formData.images.length >= 5) {
+    if (formData.imgInputs.length >= 5) {
       alert('Chỉ được phép tối đa 5 ảnh sản phẩm!');
       return;
     }
     setFormData({
       ...formData,
-      images: [...formData.images, { type: 'url', value: '' }]
+      imgInputs: [...formData.imgInputs, { type: 'url', value: '' }]
     });
   };
 
   const handleRemoveImageField = (index) => {
-    const newImages = formData.images.filter((_, i) => i !== index);
+    const newInputs = formData.imgInputs.filter((_, i) => i !== index);
     setFormData({
       ...formData,
-      images: newImages.length > 0 ? newImages : [{ type: 'url', value: '' }],
-      img: newImages[0]?.value || ''
+      imgInputs: newInputs.length > 0 ? newInputs : [{ type: 'url', value: '' }]
     });
   };
 
@@ -160,10 +148,20 @@ export default function CreateProductPage() {
       return;
     }
 
+    // Lọc lấy mảng các chuỗi ảnh hợp lệ (không rỗng)
+    const validImages = formData.imgInputs
+      .map(item => item.value)
+      .filter(val => typeof val === 'string' && val.trim() !== '');
+
+    if (validImages.length === 0) {
+      alert('Vui lòng cung cấp ít nhất 1 hình ảnh cho sản phẩm!');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // 1. Kiểm tra xem đúng tác giả (currentUserId) đã đăng sản phẩm trùng tên hay chưa
+      // Kiểm tra xem user đã đăng sản phẩm trùng tên chưa
       const foundProduct = existingProducts.find((item) => {
         const itemAuthorId = item.author?._id || item.author?.id || item.author;
         const isSameAuthor = String(itemAuthorId) === String(currentUserId);
@@ -171,8 +169,7 @@ export default function CreateProductPage() {
         return isSameAuthor && isSameName;
       });
 
-      const validImageValues = formData.images.map(img => img.value).filter(val => val.trim() !== '');
-
+      // Tạo payload chuẩn khớp hoàn toàn với ProductSchema mới của bạn
       const payloadData = {
         name: formData.name,
         description: formData.description,
@@ -181,45 +178,37 @@ export default function CreateProductPage() {
         local: formData.local,
         status: formData.status,
         deviceType: formData.deviceType,
-        author: currentUserId, // Đảm bảo gửi kèm author là ID user hiện tại
-        img: validImageValues[0] || '',
-        images: validImageValues
+        author: currentUserId,
+        img: validImages, // Truyền mảng chuỗi vào trường img đúng theo model yêu cầu
+        startDate: new Date().toISOString()
       };
 
       if (foundProduct) {
-        // --- TRƯỜNG HỢP ĐÃ CÓ: CỘNG DỒN AMOUNT VÀ UPDATE THÔNG TIN ---
         const updatedAmount = Number(foundProduct.amount || 0) + Number(formData.amount);
         
         const updatePayload = {
           ...foundProduct,
           ...payloadData,
-          amount: updatedAmount, 
-          startDate: foundProduct.startDate || new Date().toISOString()
+          amount: updatedAmount
         };
 
         const res = await axios.post('/api/products/c', updatePayload);
 
         if (res.data.success) {
-          alert(`Bạn đã có sản phẩm này! Đã tự động tăng số lượng thêm ${formData.amount} (Tổng tồn kho: ${updatedAmount}) và cập nhật thông tin.`);
+          alert(`Bạn đã có sản phẩm này! Đã tăng số lượng thêm ${formData.amount} và cập nhật thông tin.`);
           sessionStorage.removeItem('productsCache');
-          navigate('/home');
+          navigate('[Trang chủ](http://localhost:5001/)');
         } else {
           alert('Không thể cập nhật sản phẩm: ' + res.data.message);
         }
 
       } else {
-        // --- TRƯỜNG HỢP CHƯA CÓ: TẠO MỚI BÀI ĐĂNG ---
-        const dataToSend = {
-          ...payloadData,
-          startDate: new Date().toISOString()
-        };
-        
-        const res = await axios.post('/api/products/c', dataToSend);
+        const res = await axios.post('/api/products/c', payloadData);
 
         if (res.data.success) {
           alert('Đăng bài viết mới thành công!');
           sessionStorage.removeItem('productsCache');
-          navigate('/home'); 
+          navigate('[Trang chủ](http://localhost:5001/)'); 
         } else {
           alert('Không thể đăng bài: ' + res.data.message);
         }
@@ -227,7 +216,7 @@ export default function CreateProductPage() {
 
     } catch (err) {
       console.error('Lỗi khi xử lý bài đăng:', err);
-      alert('Lưu thất bại! Bạn hãy F12 -> Network để xem chi tiết nhé.');
+      alert('Lưu thất bại! ' + (err.response?.data?.message || err.message));
     } finally {
       setIsLoading(false);
     }
@@ -287,14 +276,14 @@ export default function CreateProductPage() {
           </div>
         </div>
 
-        {/* PHẦN QUẢN LÝ ẢNH SẢN PHẨM (TỐI ĐA 5 ẢNH - MỖI Ô TÙY CHỌN RIÊNG URL HOẶC FILE) */}
+        {/* PHẦN QUẢN LÝ HÌNH ẢNH (TỐI ĐA 5 ẢNH - HỖN HỢP URL HOẶC FILE BASE64) */}
         <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#334155', marginBottom: '10px' }}>
             Hình ảnh sản phẩm (Tối đa 5 ảnh)
           </label>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {formData.images.map((imgItem, index) => (
+            {formData.imgInputs.map((imgItem, index) => (
               <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                 
                 <select 
@@ -323,7 +312,7 @@ export default function CreateProductPage() {
                   />
                 )}
 
-                {formData.images.length > 1 && (
+                {formData.imgInputs.length > 1 && (
                   <button 
                     type="button" 
                     onClick={() => handleRemoveImageField(index)}
@@ -335,7 +324,7 @@ export default function CreateProductPage() {
               </div>
             ))}
 
-            {formData.images.length < 5 && (
+            {formData.imgInputs.length < 5 && (
               <button 
                 type="button" 
                 onClick={handleAddImageField}
@@ -363,7 +352,7 @@ export default function CreateProductPage() {
           <button type="submit" disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
             {isLoading ? 'Đang xử lý...' : 'Xác nhận Đăng tin'}
           </button>
-          <button type="button" onClick={() => navigate('/home')} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+          <button type="button" onClick={() => navigate('[Trang chủ](http://localhost:5001/)')} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
             Hủy bỏ
           </button>
         </div>
