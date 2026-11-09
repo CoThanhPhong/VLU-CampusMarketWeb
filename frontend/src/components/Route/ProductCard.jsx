@@ -92,6 +92,7 @@ export default function ProductCard({ product }) {
     if (!isAvailable) return;
 
     try {
+      // Lấy giỏ hàng hiện tại từ sessionStorage hoặc khởi tạo mảng rỗng
       let currentCart = [];
       try {
         const savedCart = sessionStorage.getItem('cartItems');
@@ -100,12 +101,15 @@ export default function ProductCard({ product }) {
         currentCart = [];
       }
 
+      // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
       const existingIndex = currentCart.findIndex(item => (item.product || item._id) === product._id);
       
       if (existingIndex > -1) {
+        // Nếu đã có, cộng dồn số lượng nhưng không vượt quá kho (`amount`)
         const newQuantity = currentCart[existingIndex].quantity + qty;
         currentCart[existingIndex].quantity = newQuantity <= product.amount ? newQuantity : product.amount;
       } else {
+        // Nếu chưa có, thêm mới sản phẩm theo đúng cấu trúc giỏ hàng
         currentCart.push({
           _id: product._id,
           product: product._id,
@@ -118,12 +122,15 @@ export default function ProductCard({ product }) {
         });
       }
 
+      // Gửi yêu cầu đồng bộ lên Server bằng API POST /api/cart/u
       const response = await axios.post('/api/cart/u', { items: currentCart }, {
         withCredentials: true
       });
 
       if (response.data.success) {
+        // Lưu lại dữ liệu trả về chuẩn từ server vào sessionStorage
         sessionStorage.setItem('cartItems', JSON.stringify(response.data.data));
+        // Phát sự kiện toàn hệ thống để cập nhật Badge số lượng ở Header
         window.dispatchEvent(new Event('cartUpdated'));
         alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng thành công!`);
       }
@@ -133,11 +140,12 @@ export default function ProductCard({ product }) {
     }
   };
 
-  // 2. Hàm xử lý nút "Mua ngay"
+  // 2. Hàm xử lý nút "Mua ngay" (Lưu tạm vào checkoutItems rồi chuyển hướng sang trang checkout)
   const handleBuyNow = (e) => { 
     e.stopPropagation(); 
     if (!isAvailable) return;
 
+    // Đóng gói sản phẩm mua ngay thành một mảng danh sách thanh toán
     const buyNowItem = [{
       _id: product._id,
       product: product._id,

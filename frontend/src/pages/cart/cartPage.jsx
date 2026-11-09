@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ export default function CartPage() {
 
       if (response.ok && data.success) {
         setCartItems(data.data);
-        // Lưu lại vào sessionStorage
         sessionStorage.setItem('cartItems', JSON.stringify(data.data));
       }
     } catch (error) {
@@ -44,18 +44,15 @@ export default function CartPage() {
 
   // 3. Xử lý khi load trang hoặc bấm F5
   useEffect(() => {
-    // Kiểm tra xem user có vừa bấm F5 (reload) trình duyệt hay không
     const navEntries = performance.getEntriesByType('navigation');
     const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
 
     const savedCart = sessionStorage.getItem('cartItems');
 
     if (isReload || !savedCart) {
-      // TRƯỜNG HỢP 1: Vừa bấm F5 hoặc chưa có dữ liệu trong sessionStorage -> Gọi API lấy mới từ server
       fetchCartFromAPI();
       window.dispatchEvent(new Event('cartUpdated'));
     } else {
-      // TRƯỜNG HỢP 2: Chuyển trang nội bộ (Client-side routing) -> Dùng luôn data sẵn có trong sessionStorage cho mượt
       setCartItems(JSON.parse(savedCart));
       window.dispatchEvent(new Event('cartUpdated'));
     }
@@ -69,15 +66,15 @@ export default function CartPage() {
           const newQty = item.quantity + delta;
           if (newQty >= 0 && newQty <= item.amount) {
             if (newQty === 0) {
-            handleRemoveItem(item._id);
-          }
+              handleRemoveItem(item._id);
+            }
             window.dispatchEvent(new Event('cartUpdated'));
             return { ...item, quantity: newQty };
           } 
         }
         return item;
       });
-      syncCartToServer(updated); // Đồng bộ ngầm lên server
+      syncCartToServer(updated);
       return updated;
     });
   };
@@ -87,7 +84,7 @@ export default function CartPage() {
     setCartItems(prev => {
       const updated = prev.filter(item => item._id !== id);
       sessionStorage.setItem('cartItems', JSON.stringify(updated));
-      syncCartToServer(updated); // Đồng bộ ngầm lên server
+      syncCartToServer(updated);
       return updated;
     });
     window.dispatchEvent(new Event('cartUpdated'));
@@ -103,8 +100,32 @@ export default function CartPage() {
 
   return (
     <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      
+      {/* Nút quay lại góc trái phía trên (giống phong cách trang profile) */}
+      <button 
+        className="back-link" 
+        onClick={() => navigate('/home')} 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '6px', 
+          background: 'none', 
+          border: 'none', 
+          color: '#007bff', 
+          cursor: 'pointer', 
+          fontSize: '15px', 
+          fontWeight: '600', 
+          marginBottom: '15px',
+          padding: 0
+        }}
+      >
+        <ArrowLeft size={17}/> Tiếp tục mua sắm
+      </button>
+
       <div style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0, color: '#333' }}>Giỏ Hàng Của Bạn {loading && <span style={{fontSize: '14px', color: '#888'}}>(Đang đồng bộ từ server...)</span>}</h2>
+        <h2 style={{ margin: 0, color: '#333' }}>
+          Giỏ Hàng Của Bạn {loading && <span style={{fontSize: '14px', color: '#888'}}>(Đang đồng bộ từ server...)</span>}
+        </h2>
       </div>
       
       {cartItems.length === 0 ? (

@@ -10,7 +10,6 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     fullName: user ? JSON.parse(user).profile.name : '',
     phone: user ? JSON.parse(user).profile.phone : '',
-    address: '',
     local: 'Cơ sở 1',
     paymentMethod: 'COD'
   });
@@ -44,7 +43,6 @@ export default function CheckoutPage() {
       shippingInfo: {
         fullName: formData.fullName,
         phone: formData.phone,
-        address: formData.address,
         local: formData.local
       },
       paymentMethod: formData.paymentMethod,
@@ -96,15 +94,6 @@ export default function CheckoutPage() {
               onChange={handleChange} 
               required 
               style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
-            />
-            <textarea 
-              name="address" 
-              placeholder="Địa chỉ nhận hàng chi tiết" 
-              value={formData.address} 
-              onChange={handleChange} 
-              required 
-              rows="3"
-              style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc', resize: 'vertical' }} 
             />
             
             <label style={{ fontWeight: 'bold', marginTop: '5px' }}>Chọn cơ sở nhận hàng:</label>

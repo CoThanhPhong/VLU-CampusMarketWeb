@@ -6,13 +6,6 @@ export default function CreateProductPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-// Lấy dữ liệu tài khoản thật đang đăng nhập từ Local Storage
-const authData = localStorage.getItem('user') || localStorage.getItem('userInfo');
-const realUser = authData ? JSON.parse(authData) : null;
-
-// Dùng ID thật nếu có, nếu lỗi mới dùng ID giả để dự phòng
-const currentUserId = realUser?._id || realUser?.id || '6ace1ce784295359649d4189';
-
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -22,7 +15,7 @@ const currentUserId = realUser?._id || realUser?.id || '6ace1ce784295359649d4189
     img: '',
     status: 'Còn hàng', // Chỉ được dùng 'Còn hàng' hoặc 'Hết hàng'
     deviceType: 'mobile',
-    author: currentUserId // <-- Bổ sung theo yêu cầu mới của Leader
+    author: '', // Bắt buộc theo Schema, sẽ được Backend tự động gán từ user hiện tại
   });
 
   const handleChange = (e) => {
@@ -56,8 +49,6 @@ const currentUserId = realUser?._id || realUser?.id || '6ace1ce784295359649d4189
       .then((res) => {
         if (res.data.success) {
           alert('Đăng bài viết mới thành công!');
-          // XÓA CACHE ĐỂ TRANG CHỦ TẢI LẠI BÀI MỚI
-          sessionStorage.removeItem('productsCache');
           navigate('/home'); 
         } else {
           alert('Không thể đăng bài: ' + res.data.message);
@@ -113,7 +104,7 @@ const currentUserId = realUser?._id || realUser?.id || '6ace1ce784295359649d4189
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Tình trạng</label>
             <select name="status" value={formData.status} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }}>
               <option value="Còn hàng">Còn hàng</option>
-              <option value="Hết hàng">Hết hàng</option> 
+              <option value="Hết hàng">Hết hàng</option> {/* Sửa lại cho khớp Backend */}
             </select>
           </div>
         </div>

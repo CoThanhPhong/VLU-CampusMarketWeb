@@ -10,12 +10,11 @@ import PostDetail from "./pages/postDetail/PostDetail";
 import UserDetail from "./pages/userDetail/UserDetail";
 
 // 1. Import các trang bạn vừa làm (Nhớ kiểm tra lại đường dẫn cho chuẩn xác với máy bạn)
-import ProductList from "./pages/home/ProductList"; 
-import CreateProductPage from "./pages/create/CreateProductPage";
 import CartPage from "./pages/cart/cartPage";
 import OrderListPage from "./pages/order/ordersPage";
 import CheckoutPage from "./components/checkout/checkoutPage";
-// import ProductDetailPage from "./pages/ProductDetailPage"; // Mở comment này ra khi bạn làm xong trang Chi tiết
+import ProductList from "./pages/home/ProductList"; 
+import CreateProductPage from "./pages/create/CreateProductPage";
 
 function App() {
   return (
