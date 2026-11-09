@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1); // State quản lý số lượng mua
   
+  // State lưu thông tin tên và id của tác giả
+  const [authorName, setAuthorName] = useState('Đang tải...');
+  const [authorId, setAuthorId] = useState('#');
+
   const isAvailable = product?.status === 'Còn hàng' && product?.amount > 0;
   
   // Mapping tên loại thiết bị sang tiếng Việt
@@ -14,10 +19,62 @@ export default function ProductCard({ product }) {
     laptop: 'Laptop', 
     mac: 'Macbook' 
   };
-  
-  // Xử lý thông tin tác giả
-  const authorId = product?.author?._id || product?.author || '#';
-  const authorName = product?.author?.name || 'Thành viên VLU';
+
+  // Lấy thông tin tác giả dựa vào product.author (có thể là string id hoặc object)
+  useEffect(() => {
+    let alive = true;
+
+    const resolveAuthor = async () => {
+      const rawAuthor = product?.author;
+      
+      if (!rawAuthor) {
+        if (alive) {
+          setAuthorName('Thành viên VLU');
+          setAuthorId('#');
+        }
+        return;
+      }
+
+      // Trường hợp author đã là một object đầy đủ thông tin { _id, profile: { name } }
+      if (typeof rawAuthor === 'object' && rawAuthor !== null) {
+        const id = rawAuthor._id || rawAuthor.id || '#';
+        const name = rawAuthor.profile?.name || rawAuthor.name || 'Thành viên VLU';
+        if (alive) {
+          setAuthorId(id);
+          setAuthorName(name);
+        }
+        return;
+      }
+
+      // Trường hợp author chỉ là một chuỗi ID (ví dụ: "6aecaa1bd8283c08d80d08b1")
+      const idStr = String(rawAuthor);
+      if (alive) setAuthorId(idStr);
+
+      try {
+        const response = await axios.post('/api/auth/user', { id: idStr });
+        const resData = response.data;
+        const userData = resData?.data || resData?.user || resData;
+        const name = userData?.profile?.name || userData?.name;
+
+        if (name && alive) {
+          setAuthorName(name);
+        } else if (alive) {
+          setAuthorName('Thành viên VLU');
+        }
+      } catch (error) {
+        console.error('Lỗi lấy thông tin tác giả:', error);
+        if (alive) {
+          setAuthorName('Thành viên VLU');
+        }
+      }
+    };
+
+    resolveAuthor();
+
+    return () => {
+      alive = false;
+    };
+  }, [product?.author]);
 
   // Hàm xử lý tăng giảm số lượng (không vượt quá số lượng trong kho)
   const handleDecrease = (e) => { 
@@ -29,15 +86,71 @@ export default function ProductCard({ product }) {
     setQty(p => p < product.amount ? p + 1 : product.amount); 
   };
 
-  // Hàm xử lý nút Mua hàng
+  // 1. Hàm xử lý nút "Thêm giỏ hàng" (Gọi API /api/cart/u)
+  const handleAddToCart = async (e) => { 
+    e.stopPropagation(); 
+    if (!isAvailable) return;
+
+    try {
+      let currentCart = [];
+      try {
+        const savedCart = sessionStorage.getItem('cartItems');
+        if (savedCart) currentCart = JSON.parse(savedCart);
+      } catch (err) {
+        currentCart = [];
+      }
+
+      const existingIndex = currentCart.findIndex(item => (item.product || item._id) === product._id);
+      
+      if (existingIndex > -1) {
+        const newQuantity = currentCart[existingIndex].quantity + qty;
+        currentCart[existingIndex].quantity = newQuantity <= product.amount ? newQuantity : product.amount;
+      } else {
+        currentCart.push({
+          _id: product._id,
+          product: product._id,
+          name: product.name,
+          price: product.price,
+          img: product.img,
+          amount: product.amount,
+          local: product.local || 'Cơ sở 1',
+          quantity: qty
+        });
+      }
+
+      const response = await axios.post('/api/cart/u', { items: currentCart }, {
+        withCredentials: true
+      });
+
+      if (response.data.success) {
+        sessionStorage.setItem('cartItems', JSON.stringify(response.data.data));
+        window.dispatchEvent(new Event('cartUpdated'));
+        alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng thành công!`);
+      }
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      alert(error.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+    }
+  };
+
+  // 2. Hàm xử lý nút "Mua ngay"
   const handleBuyNow = (e) => { 
     e.stopPropagation(); 
-    alert(`Đã tiến hành thanh toán ${qty} sản phẩm.`); 
-  };
-  
-  const handleAddToCart = (e) => { 
-    e.stopPropagation(); 
-    alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng!`); 
+    if (!isAvailable) return;
+
+    const buyNowItem = [{
+      _id: product._id,
+      product: product._id,
+      name: product.name,
+      price: product.price,
+      img: product.img,
+      amount: product.amount,
+      local: product.local || 'Cơ sở 1',
+      quantity: qty
+    }];
+
+    sessionStorage.setItem('checkoutItems', JSON.stringify(buyNowItem));
+    navigate('/checkout');
   };
 
   return (
@@ -101,7 +214,7 @@ export default function ProductCard({ product }) {
             {product?.price ? product.price.toLocaleString('vi-VN') : 0} <span style={{ fontSize: '12px', fontWeight: '400', color: '#64748b' }}>VNĐ</span>
           </div>
           
-        {/* Thông tin Người đăng */}
+        {/* Thông tin Người đăng (Hiển thị tên thật lấy qua API theo author ID) */}
         <div 
           onClick={(e) => { 
             e.stopPropagation(); 
@@ -116,7 +229,7 @@ export default function ProductCard({ product }) {
           Người đăng: <b>{authorName}</b>
         </div>
 
-          {/* Hàng hiển thị Vị trí và Ngày đăng (Giữ nguyên từ bản cũ) */}
+          {/* Hàng hiển thị Vị trí và Ngày đăng */}
           <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,7 +249,7 @@ export default function ProductCard({ product }) {
             </div>
           </div>
 
-          {/* Bộ chọn số lượng mua (UI Mới) */}
+          {/* Bộ chọn số lượng mua */}
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#f8fafc' }}>
               <button onClick={handleDecrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
