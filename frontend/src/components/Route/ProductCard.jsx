@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
 import axios from 'axios';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1); // State quản lý số lượng mua
   
-  // State lưu thông tin tên và id của tác giả
+  // State lưu thông tin tên, id của tác giả và id của current user
   const [authorName, setAuthorName] = useState('Đang tải...');
   const [authorId, setAuthorId] = useState('#');
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const isAvailable = product?.status === 'Còn hàng' && product?.amount > 0;
   
@@ -20,56 +22,55 @@ export default function ProductCard({ product }) {
     mac: 'Macbook' 
   };
 
-  // [ĐÃ FIX] Lấy ảnh chính xác từ mọi định dạng (Mảng img, Chuỗi đơn, hoặc mảng images)
+  // 1. Lấy thông tin current user từ storage khi component mount
+  useEffect(() => {
+    try {
+      const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        const userId = parsed._id || parsed.id || parsed.profile?.id || parsed.profile?._id;
+        if (userId) {
+          setCurrentUserId(String(userId));
+        }
+      }
+    } catch (err) {
+      console.warn("Không thể lấy thông tin current user:", err);
+    }
+  }, []);
+
+  // Lấy ảnh chính xác từ mọi định dạng (Mảng img, Chuỗi đơn, hoặc mảng images)
   const getProductImage = () => {
-    // 1. Kiểm tra nếu product.img là mảng
     if (Array.isArray(product?.img) && product.img.length > 0) {
       const firstValidImg = product.img.find(img => typeof img === 'string' && img.trim() !== '');
       if (firstValidImg) return firstValidImg;
     }
-    
-    // 2. Kiểm tra nếu product.img là chuỗi đơn
     if (typeof product?.img === 'string' && product.img.trim() !== '') {
       return product.img;
     }
-
-    // 3. Dự phòng trường hợp lưu ở trường product.images
     if (Array.isArray(product?.images) && product.images.length > 0) {
       const firstValidImages = product.images.find(img => typeof img === 'string' && img.trim() !== '');
       if (firstValidImages) return firstValidImages;
     }
-
-    // Fallback mặc định nếu không có ảnh nào
     return 'https://via.placeholder.com/300x170?text=No+Image';
   };
 
-  // Hàm chuyển đổi thời gian sang dạng tương đối (vừa xong, x phút trước, x giờ trước...)
+  // Hàm chuyển đổi thời gian sang dạng tương đối
   const formatTimeAgo = (dateString) => {
     if (!dateString) return 'Gần đây';
-    
     const now = new Date();
     const past = new Date(dateString);
     const diffInSeconds = Math.floor((now - past) / 1000);
 
-    if (diffInSeconds < 60) {
-      return 'Vừa xong';
-    }
+    if (diffInSeconds < 60) return 'Vừa xong';
     const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} phút trước`;
-    }
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-      return `${diffInHours} giờ trước`;
-    }
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays} ngày trước`;
-    }
+    if (diffInDays < 7) return `${diffInDays} ngày trước`;
     return past.toLocaleDateString('vi-VN');
   };
 
-  // Kiểm tra xem bài đăng có phải là bài mới trong vòng 24 giờ qua không
   const isNewPost = () => {
     const postDate = product?.createdAt || product?.startDate;
     if (!postDate) return false;
@@ -96,7 +97,7 @@ export default function ProductCard({ product }) {
         const id = rawAuthor._id || rawAuthor.id || '#';
         const name = rawAuthor.profile?.name || rawAuthor.name || 'Thành viên VLU';
         if (alive) {
-          setAuthorId(id);
+          setAuthorId(String(id));
           setAuthorName(name);
         }
         return;
@@ -131,6 +132,9 @@ export default function ProductCard({ product }) {
     };
   }, [product?.author]);
 
+  // Kiểm tra xem người dùng hiện tại có phải là chủ bài viết hay không
+  const isOwner = currentUserId && authorId && currentUserId === authorId;
+
   const handleDecrease = (e) => { 
     e.stopPropagation(); 
     setQty(p => p > 1 ? p - 1 : 1); 
@@ -140,7 +144,6 @@ export default function ProductCard({ product }) {
     setQty(p => p < product.amount ? p + 1 : product.amount); 
   };
 
-  // Hàm xử lý nút "Thêm giỏ hàng"
   const handleAddToCart = async (e) => { 
     e.stopPropagation(); 
     if (!isAvailable) return;
@@ -187,7 +190,6 @@ export default function ProductCard({ product }) {
     }
   };
 
-  // Hàm xử lý nút "Mua ngay"
   const handleBuyNow = (e) => { 
     e.stopPropagation(); 
     if (!isAvailable) return;
@@ -205,6 +207,13 @@ export default function ProductCard({ product }) {
 
     sessionStorage.setItem('checkoutItems', JSON.stringify(buyNowItem));
     navigate('/checkout');
+  };
+
+  // Hàm xử lý nút chỉnh sửa bài viết (điều hướng đến trang tạo/chỉnh sửa bài viết kèm id sản phẩm)
+  const handleEditPost = (e) => {
+    e.stopPropagation();
+    // Thay đổi đường dẫn `/create-post` thành route trang tạo/chỉnh sửa bài viết thực tế của bạn (ví dụ: `/edit-post/${product._id}` hoặc tương tự)
+    navigate(`/create-post?edit=${product._id}`);
   };
 
   return (
@@ -240,7 +249,6 @@ export default function ProductCard({ product }) {
             onError={(e) => { e.target.src = 'https://via.placeholder.com/300x170?text=Lỗi+Ảnh'; }}
           />
           
-          {/* Nhãn Loại thiết bị */}
           <span style={{ 
             position: 'absolute', top: '8px', left: '8px', 
             backgroundColor: '#334155', color: '#ffffff', 
@@ -250,7 +258,6 @@ export default function ProductCard({ product }) {
           </span>
 
           <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
-            {/* Huy hiệu Mới */}
             {isNewPost() && (
               <span style={{
                 backgroundColor: '#f59e0b',
@@ -259,7 +266,6 @@ export default function ProductCard({ product }) {
                 Mới
               </span>
             )}
-            {/* Nhãn Trạng thái */}
             <span style={{
               backgroundColor: isAvailable ? '#16a34a' : '#64748b',
               color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 8px', borderRadius: '4px'
@@ -271,7 +277,6 @@ export default function ProductCard({ product }) {
 
         {/* THÔNG TIN CHI TIẾT SẢN PHẨM */}
         <div style={{ padding: '12px' }}>
-          {/* Tên sản phẩm dùng thẻ div để không bị khoảng cách lớn với giá tiền */}
           <div style={{ 
             fontSize: '15px', fontWeight: '600', color: '#0f172a', 
             margin: '0 0 4px 0', lineHeight: '1.3', 
@@ -283,7 +288,6 @@ export default function ProductCard({ product }) {
             {product?.price ? product.price.toLocaleString('vi-VN') : 0} <span style={{ fontSize: '12px', fontWeight: '400', color: '#64748b' }}>VNĐ</span>
           </div>
           
-          {/* Thông tin Người đăng */}
           <div 
             onClick={(e) => { 
               e.stopPropagation(); 
@@ -298,7 +302,6 @@ export default function ProductCard({ product }) {
             Người đăng: <b>{authorName}</b>
           </div>
 
-          {/* Hàng hiển thị Vị trí và Thời gian đăng tương đối */}
           <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -316,34 +319,53 @@ export default function ProductCard({ product }) {
             </div>
           </div>
 
-          {/* Bộ chọn số lượng mua */}
-          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#f8fafc' }}>
-              <button onClick={handleDecrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
-              <span style={{ fontSize: '13px', padding: '0 8px', fontWeight: '600' }}>{qty}</span>
-              <button onClick={handleIncrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
+          {/* CHỈ HIỂN THỊ BỘ CHỌN SỐ LƯỢNG NẾU KHÔNG PHẢI LÀ CHỦ BÀI ĐĂNG */}
+          {!isOwner && (
+            <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#f8fafc' }}>
+                <button onClick={handleDecrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
+                <span style={{ fontSize: '13px', padding: '0 8px', fontWeight: '600' }}>{qty}</span>
+                <button onClick={handleIncrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
+              </div>
+              <span style={{ fontSize: '11px', color: '#64748b' }}>(Sẵn có: {product?.amount || 0})</span>
             </div>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>(Sẵn có: {product?.amount || 0})</span>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* CÁC NÚT HÀNH ĐỘNG: MUA NGAY VÀ THÊM GIỎ HÀNG */}
-      <div style={{ display: 'flex', gap: '8px', padding: '0 12px 12px 12px' }}>
-        <button 
-          onClick={handleBuyNow}
-          disabled={!isAvailable}
-          style={{ flex: 1, padding: '8px 0', backgroundColor: isAvailable ? '#dc2626' : '#94a3b8', color: '#ffffff', border: 'none', borderRadius: '4px', fontWeight: '600', fontSize: '12px', cursor: isAvailable ? 'pointer' : 'not-allowed' }}
-        >
-          Mua ngay
-        </button>
-        <button 
-          onClick={handleAddToCart}
-          disabled={!isAvailable}
-          style={{ flex: 1, padding: '8px 0', backgroundColor: isAvailable ? '#10b981' : '#f1f5f9', color: isAvailable ? '#ffffff' : '#94a3b8', border: 'none', borderRadius: '4px', fontWeight: '600', fontSize: '12px', cursor: isAvailable ? 'pointer' : 'not-allowed' }}
-        >
-          Thêm giỏ hàng
-        </button>
+      {/* KHU VỰC NÚT HÀNH ĐỘNG DƯỚI CÙNG */}
+      <div style={{ padding: '0 12px 12px 12px' }}>
+        {isOwner ? (
+          /* NÚT CHỈNH SỬA DÀNH RIÊNG CHO CHỦ BÀI ĐĂNG */
+          <button 
+            onClick={handleEditPost}
+            style={{ 
+              width: '100%', padding: '8px 0', backgroundColor: '#2563eb', color: '#ffffff', 
+              border: 'none', borderRadius: '4px', fontWeight: '600', fontSize: '12px', 
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' 
+            }}
+          >
+            <Pencil size={14} /> Chỉnh sửa bài viết
+          </button>
+        ) : (
+          /* CÁC NÚT MUA HÀNG DÀNH CHO KHÁCH HÀNG KHÁC */
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={handleBuyNow}
+              disabled={!isAvailable}
+              style={{ flex: 1, padding: '8px 0', backgroundColor: isAvailable ? '#dc2626' : '#94a3b8', color: '#ffffff', border: 'none', borderRadius: '4px', fontWeight: '600', fontSize: '12px', cursor: isAvailable ? 'pointer' : 'not-allowed' }}
+            >
+              Mua ngay
+            </button>
+            <button 
+              onClick={handleAddToCart}
+              disabled={!isAvailable}
+              style={{ flex: 1, padding: '8px 0', backgroundColor: isAvailable ? '#10b981' : '#f1f5f9', color: isAvailable ? '#ffffff' : '#94a3b8', border: 'none', borderRadius: '4px', fontWeight: '600', fontSize: '12px', cursor: isAvailable ? 'pointer' : 'not-allowed' }}
+            >
+              Thêm giỏ hàng
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

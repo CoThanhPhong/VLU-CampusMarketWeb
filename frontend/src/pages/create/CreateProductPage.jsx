@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 export default function CreateProductPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [existingProducts, setExistingProducts] = useState([]);
+
+  // Lấy ID sản phẩm từ query param (ví dụ: ?edit=65abc...) nếu có
+  const searchParams = new URLSearchParams(location.search);
+  const editProductId = searchParams.get('edit');
+  const isEditing = Boolean(editProductId);
 
   // Lấy chuẩn xác ID người dùng hiện tại từ sessionStorage hoặc localStorage
   const getCurrentUserId = () => {
@@ -30,14 +36,13 @@ export default function CreateProductPage() {
     displayPrice: '',
     amount: 1, 
     local: 'Cơ sở 1',
-    // Khởi tạo mảng img chứa tối đa 5 ảnh (mỗi phần tử có type và value)
     imgInputs: [{ type: 'url', value: '' }], 
     status: 'Còn hàng', 
     deviceType: 'mobile',
     author: currentUserId 
   });
 
-  // Tải danh sách sản phẩm hiện có để kiểm tra trùng lặp theo author và tên sản phẩm
+  // 1. Tải danh sách sản phẩm hiện có
   useEffect(() => {
     if (!currentUserId) {
       console.warn("Chưa tìm thấy thông tin đăng nhập của người dùng.");
@@ -46,11 +51,47 @@ export default function CreateProductPage() {
     axios.get('/api/products/g')
       .then((res) => {
         if (res.data.success) {
-          setExistingProducts(res.data.data || []);
+          const productsList = res.data.data || [];
+          setExistingProducts(productsList);
+
+          // 2. Nếu đang ở chế độ chỉnh sửa, tìm sản phẩm tương ứng và điền sẵn vào form
+          if (editProductId) {
+            const productToEdit = productsList.find(item => String(item._id) === String(editProductId));
+            if (productToEdit) {
+              // Xử lý định dạng ảnh cũ (có thể là mảng chuỗi hoặc chuỗi đơn)
+              let loadedImages = [{ type: 'url', value: '' }];
+              const rawImgs = productToEdit.img || productToEdit.images;
+              
+              if (Array.isArray(rawImgs) && rawImgs.length > 0) {
+                loadedImages = rawImgs.map(url => ({
+                  type: url.startsWith('data:image') ? 'file' : 'url',
+                  value: url
+                }));
+              } else if (typeof rawImgs === 'string' && rawImgs.trim() !== '') {
+                loadedImages = [{
+                  type: rawImgs.startsWith('data:image') ? 'file' : 'url',
+                  value: rawImgs
+                }];
+              }
+
+              setFormData({
+                name: productToEdit.name || '',
+                description: productToEdit.description || '',
+                price: productToEdit.price || '',
+                displayPrice: productToEdit.price ? Number(productToEdit.price).toLocaleString('vi-VN') : '',
+                amount: productToEdit.amount || 1,
+                local: productToEdit.local || 'Cơ sở 1',
+                imgInputs: loadedImages,
+                status: productToEdit.status || 'Còn hàng',
+                deviceType: productToEdit.deviceType || 'mobile',
+                author: currentUserId
+              });
+            }
+          }
         }
       })
       .catch((err) => console.error('Lỗi tải danh sách sản phẩm:', err));
-  }, [currentUserId]);
+  }, [currentUserId, editProductId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,7 +133,7 @@ export default function CreateProductPage() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Kích thước file ảnh quá lớn! Vول lòng chọn ảnh dưới 2MB.');
+      alert('Kích thước file ảnh quá lớn! Vui lòng chọn ảnh dưới 2MB.');
       return;
     }
 
@@ -148,7 +189,6 @@ export default function CreateProductPage() {
       return;
     }
 
-    // Lọc lấy mảng các chuỗi ảnh hợp lệ (không rỗng)
     const validImages = formData.imgInputs
       .map(item => item.value)
       .filter(val => typeof val === 'string' && val.trim() !== '');
@@ -161,15 +201,6 @@ export default function CreateProductPage() {
     setIsLoading(true);
 
     try {
-      // Kiểm tra xem user đã đăng sản phẩm trùng tên chưa
-      const foundProduct = existingProducts.find((item) => {
-        const itemAuthorId = item.author?._id || item.author?.id || item.author;
-        const isSameAuthor = String(itemAuthorId) === String(currentUserId);
-        const isSameName = item.name?.trim().toLowerCase() === formData.name.trim().toLowerCase();
-        return isSameAuthor && isSameName;
-      });
-
-      // Tạo payload chuẩn khớp hoàn toàn với ProductSchema mới của bạn
       const payloadData = {
         name: formData.name,
         description: formData.description,
@@ -179,38 +210,67 @@ export default function CreateProductPage() {
         status: formData.status,
         deviceType: formData.deviceType,
         author: currentUserId,
-        img: validImages, // Truyền mảng chuỗi vào trường img đúng theo model yêu cầu
+        img: validImages,
         startDate: new Date().toISOString()
       };
 
-      if (foundProduct) {
-        const updatedAmount = Number(foundProduct.amount || 0) + Number(formData.amount);
-        
+      if (isEditing) {
+        // Trường hợp đang ở chế độ chỉnh sửa -> Cập nhật trực tiếp sản phẩm theo editProductId
         const updatePayload = {
-          ...foundProduct,
-          ...payloadData,
-          amount: updatedAmount
+          _id: editProductId,
+          ...payloadData
         };
 
         const res = await axios.post('/api/products/c', updatePayload);
 
         if (res.data.success) {
-          alert(`Bạn đã có sản phẩm này! Đã tăng số lượng thêm ${formData.amount} và cập nhật thông tin.`);
+          alert('Cập nhật bài viết thành công!');
           sessionStorage.removeItem('productsCache');
-          navigate('[Trang chủ](http://localhost:5001/)');
+          window.dispatchEvent(new Event('productsUpdated'));
+          navigate('/home');
         } else {
           alert('Không thể cập nhật sản phẩm: ' + res.data.message);
         }
 
       } else {
-        const res = await axios.post('/api/products/c', payloadData);
+        // Trường hợp đăng mới / kiểm tra trùng tên sản phẩm
+        const foundProduct = existingProducts.find((item) => {
+          const itemAuthorId = item.author?._id || item.author?.id || item.author;
+          const isSameAuthor = String(itemAuthorId) === String(currentUserId);
+          const isSameName = item.name?.trim().toLowerCase() === formData.name.trim().toLowerCase();
+          return isSameAuthor && isSameName;
+        });
 
-        if (res.data.success) {
-          alert('Đăng bài viết mới thành công!');
-          sessionStorage.removeItem('productsCache');
-          navigate('[Trang chủ](http://localhost:5001/)'); 
+        if (foundProduct) {
+          const updatedAmount = Number(foundProduct.amount || 0) + Number(formData.amount);
+          const updatePayload = {
+            ...foundProduct,
+            ...payloadData,
+            amount: updatedAmount
+          };
+
+          const res = await axios.post('/api/products/c', updatePayload);
+
+          if (res.data.success) {
+            alert(`Bạn đã có sản phẩm này! Đã tăng số lượng thêm ${formData.amount} và cập nhật thông tin.`);
+            sessionStorage.removeItem('productsCache');
+            window.dispatchEvent(new Event('productsUpdated'));
+            navigate('/home');
+          } else {
+            alert('Không thể cập nhật sản phẩm: ' + res.data.message);
+          }
+
         } else {
-          alert('Không thể đăng bài: ' + res.data.message);
+          const res = await axios.post('/api/products/c', payloadData);
+
+          if (res.data.success) {
+            alert('Đăng bài viết mới thành công!');
+            sessionStorage.removeItem('productsCache');
+            window.dispatchEvent(new Event('productsUpdated'));
+            navigate('/home'); 
+          } else {
+            alert('Không thể đăng bài: ' + res.data.message);
+          }
         }
       }
 
@@ -223,9 +283,9 @@ export default function CreateProductPage() {
   };
 
   return (
-    <div style={{ maxWidth: '650px', margin: '0 auto', backgroundColor: '#ffffff', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+    <div style={{ maxWidth: '650px', margin: '20px auto', backgroundColor: '#ffffff', padding: '24px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
       <h2 style={{ margin: '0 0 20px 0', color: '#0f172a', fontSize: '20px', fontWeight: '700', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-        Đăng Tin Bán Thiết Bị
+        {isEditing ? 'Chỉnh Sửa Bài Đăng Thiết Bị' : 'Đăng Tin Bán Thiết Bị'}
       </h2>
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -276,7 +336,7 @@ export default function CreateProductPage() {
           </div>
         </div>
 
-        {/* PHẦN QUẢN LÝ HÌNH ẢNH (TỐI ĐA 5 ẢNH - HỖN HỢP URL HOẶC FILE BASE64) */}
+        {/* PHẦN QUẢN LÝ HÌNH ẢNH */}
         <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#334155', marginBottom: '10px' }}>
             Hình ảnh sản phẩm (Tối đa 5 ảnh)
@@ -350,9 +410,9 @@ export default function CreateProductPage() {
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
           <button type="submit" disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
-            {isLoading ? 'Đang xử lý...' : 'Xác nhận Đăng tin'}
+            {isLoading ? 'Đang xử lý...' : (isEditing ? 'Lưu Thay Đổi' : 'Xác nhận Đăng tin')}
           </button>
-          <button type="button" onClick={() => navigate('[Trang chủ](http://localhost:5001/)')} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+          <button type="button" onClick={() => navigate('/home')} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
             Hủy bỏ
           </button>
         </div>
