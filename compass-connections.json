@@ -1,0 +1,24 @@
+{
+  "type": "Compass Connections",
+  "version": {
+    "$numberInt": "1"
+  },
+  "connections": [
+    {
+      "id": "9c8571d8-5c64-47e6-af31-4e362f5438bd",
+      "lastUsed": {
+        "$date": {
+          "$numberLong": "1791899991536"
+        }
+      },
+      "favorite": {
+        "name": "vlu-campusmarket.9xdnirr.mongodb.net"
+      },
+      "savedConnectionType": "recent",
+      "connectionOptions": {
+        "connectionString": "mongodb+srv://dev@vlu-campusmarket.9xdnirr.mongodb.net/",
+        "oidc": {}
+      }
+    }
+  ]
+}

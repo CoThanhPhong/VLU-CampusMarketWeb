@@ -1,6 +1,20 @@
+<<<<<<< HEAD
 node_modules/
 .postman
 postman/documents
 postman/flows
 postman/specs
 postman/mocks
+=======
+# Bỏ qua thư viện
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Bỏ qua file môi trường
+.env
+backend/.env
+
+# Bỏ qua file build 
+frontend/dist/
+>>>>>>> feature/sam-post-list-edit
