@@ -11,35 +11,68 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocal, setSelectedLocal] = useState('all');
 
+  // Hàm gọi API lấy danh sách sản phẩm và lưu cache
+  const fetchProductsFromAPI = () => {
+    setLoading(true);
+    axios.get('/api/products/g')
+      .then((res) => {
+        if (res.data.success) {
+          const rawProducts = res.data.data || [];
+          setProducts(rawProducts);
+          sessionStorage.setItem('productsCache', JSON.stringify(rawProducts));
+        }
+      })
+      .catch((err) => console.error('Lỗi API:', err))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
-    // KIỂM TRA BỘ NHỚ TẠM (CACHE) THEO YÊU CẦU CỦA LEADER
+    // 1. Kiểm tra xem người dùng có vừa bấm F5 (reload) trình duyệt hay không
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+
     const cachedData = sessionStorage.getItem('productsCache');
-    
-    if (cachedData) {
-      // Nếu đã có dữ liệu trong cache, sử dụng ngay lập tức không cần fetch API
-      setProducts(JSON.parse(cachedData));
-      setLoading(false);
+
+    // 2. Nếu là F5 hoặc chưa có cache -> Gọi API mới từ server
+    if (isReload || !cachedData) {
+      fetchProductsFromAPI();
     } else {
-      // Nếu chưa có, gọi API lấy dữ liệu
-      axios.get('/api/products/g')
-        .then((res) => {
-          if (res.data.success) {
-            setProducts(res.data.data || []);
-            // LƯU KẾT QUẢ VÀO CACHE ĐỂ DÙNG CHO CÁC LẦN TẢI SAU
-            sessionStorage.setItem('productsCache', JSON.stringify(res.data.data || []));
-          }
-        })
-        .catch((err) => console.error('Lỗi API:', err))
-        .finally(() => setLoading(false));
+      // 3. Nếu chuyển trang nội bộ bình thường -> Lấy từ cache cho mượt
+      try {
+        setProducts(JSON.parse(cachedData));
+      } catch (e) {
+        setProducts([]);
+      }
+      setLoading(false);
     }
+
+    // 4. Lắng nghe sự kiện cập nhật sản phẩm toàn hệ thống
+    const handleProductsUpdated = () => {
+      fetchProductsFromAPI();
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdated);
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdated);
+    };
   }, []);
 
+  // Lọc và sắp xếp sản phẩm (Sắp xếp mới nhất lên đầu, lọc bỏ sản phẩm hết hàng hoặc amount <= 0)
   const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
+    // Sắp xếp theo ngày tạo mới nhất (createdAt hoặc startDate) giảm dần
+    const sorted = [...products].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.startDate || 0);
+      const dateB = new Date(b.createdAt || b.startDate || 0);
+      return dateB - dateA; // Mới nhất xếp trước
+    });
+
+    return sorted.filter((item) => {
+      const inStock = (item.amount || 0) > 0 && item.status !== 'Hết hàng'; // Loại bỏ sản phẩm hết hàng
       const matchSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = selectedCategory === 'all' || item.deviceType === selectedCategory;
       const matchLocal = selectedLocal === 'all' || item.local === selectedLocal;
-      return matchSearch && matchCategory && matchLocal;
+      
+      return inStock && matchSearch && matchCategory && matchLocal;
     });
   }, [products, searchTerm, selectedCategory, selectedLocal]);
 
