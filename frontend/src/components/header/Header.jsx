@@ -1,23 +1,67 @@
-import React, { useState, useRef, useEffect } from 'react';
-import UserMenu from '../userMenu/UserMenu';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from "react";
+import UserMenu from "../userMenu/UserMenu";
+import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Header = ({ isOpen, setIsOpen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [uniqueItemCount, setUniqueItemCount] = useState(0);
   const userMenuRef = useRef(null);
 
-  // Lấy trực tiếp user mới nhất từ localStorage mỗi khi component render
+  // Hàm đọc dữ liệu user an toàn
   const getUserFromStorage = () => {
     try {
-      const storedUser = localStorage.getItem('user');
-      return storedUser ? JSON.parse(storedUser) : sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+      const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+      return storedUser ? JSON.parse(storedUser) : null;
     } catch (e) {
       return null;
     }
   };
 
-  const user = getUserFromStorage();
-  const userAvatar = user?.profile?.avatar || "";
+  // State lưu trữ user ở Header
+  const [currentUser, setCurrentUser] = useState(getUserFromStorage);
+  
+  // Lấy avatar linh hoạt cả từ profile.avatar hoặc avatar gốc
+  const userAvatar = currentUser?.profile?.avatar || currentUser?.avatar || "";
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await axios.get("/api/cart/g", { withCredentials: true });
+      if (response.data.success && Array.isArray(response.data.data)) {
+        setUniqueItemCount(response.data.data.length);
+      }
+    } catch (error) {
+      try {
+        const savedCart = sessionStorage.getItem("cartItems");
+        setUniqueItemCount(savedCart ? JSON.parse(savedCart).length : 0);
+      } catch (e) {
+        setUniqueItemCount(0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+
+    // Cập nhật state ngay khi có sự kiện userUpdated
+    const handleUserUpdated = () => {
+      setCurrentUser(getUserFromStorage());
+    };
+
+    const handleCartUpdated = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+    window.addEventListener("cartUpdated", handleCartUpdated);
+    window.addEventListener("storage", handleUserUpdated);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+      window.removeEventListener("cartUpdated", handleCartUpdated);
+      window.removeEventListener("storage", handleUserUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -25,39 +69,68 @@ const Header = ({ isOpen, setIsOpen }) => {
         setShowUserMenu(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <header className="header">
       <div className="header-left">
-        <button className={`menu-btn ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(!isOpen)}>
+        <button
+          className={`menu-btn ${isOpen ? "active" : ""}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <Link className="logo" to='/'>VLU Campus Market</Link>
+        <Link className="logo" to="/">
+          VLU Campus Market
+        </Link>
       </div>
 
       <div className="header-right">
-        <button className="icon-btn">
+        <Link
+          to="/cart"
+          className="icon-btn"
+          style={{ position: "relative", display: "inline-flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
+          title="Giỏ hàng"
+        >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
-          <span className="badge"></span>
-        </button>
-        
+          {uniqueItemCount > 0 && (
+            <span
+              className="badge"
+              style={{
+                position: "absolute", top: "2px", right: "2px", backgroundColor: "#e74c3c", color: "#fff",
+                fontSize: "9px", fontWeight: "bold", minWidth: "15px", height: "15px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #fff"
+              }}
+            >
+              {uniqueItemCount}
+            </span>
+          )}
+        </Link>
+
         <div className="user-menu-container" ref={userMenuRef}>
-          <button 
-            className={`icon-btn user-btn ${showUserMenu ? 'active' : ''}`}
+          <button
+            className={`icon-btn user-btn ${showUserMenu ? "active" : ""}`}
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            {userAvatar !== "" ? (
-              <img 
-                src={userAvatar} 
-                alt="User Avatar" 
-                style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', display: 'block' }} 
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt="User Avatar"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  display: "block"
+                }}
               />
             ) : (
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -66,8 +139,9 @@ const Header = ({ isOpen, setIsOpen }) => {
             )}
           </button>
 
-          <div className={`user-dropdown-wrapper ${showUserMenu ? 'active' : ''}`}>
-            <UserMenu />
+          <div className={`user-dropdown-wrapper ${showUserMenu ? "active" : ""}`}>
+            {/* Truyền user mới xuống UserMenu để đồng bộ thông tin trong menu thả xuống */}
+            <UserMenu user={currentUser} />
           </div>
         </div>
       </div>
