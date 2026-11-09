@@ -4,7 +4,7 @@ import { ArrowLeft, Package, CalendarDays, UserRound, Mail, Phone, GraduationCap
 import { getProducts, getProductOwnerId } from "../../services/detailApi";
 import ProductCard from "../../components/Route/ProductCard";
 import axios from "axios";
-import "../../css/DetailPages.css";
+import "../../css/Profile.css";
 
 export default function UserDetail() {
   const { id } = useParams();
