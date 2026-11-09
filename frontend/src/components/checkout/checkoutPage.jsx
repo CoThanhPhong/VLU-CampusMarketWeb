@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function CheckoutPage() {
+  const user = sessionStorage.getItem('user');
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
+    fullName: user ? JSON.parse(user).profile.name : '',
+    phone: user ? JSON.parse(user).profile.phone : '',
     address: '',
     local: 'Cơ sở 1',
     paymentMethod: 'COD'
@@ -35,7 +36,7 @@ export default function CheckoutPage() {
 
     const orderPayload = {
       orderItems: items.map(item => ({
-        product: item._id,
+        product: item.product,
         quantity: item.quantity,
         price: item.price,
         local: item.local
@@ -59,6 +60,7 @@ export default function CheckoutPage() {
         alert('Đặt hàng thành công!');
         sessionStorage.removeItem('checkoutItems');
         sessionStorage.removeItem('cartItems');
+        window.dispatchEvent(new Event('cartUpdated'));
         navigate('/orders');
       }
     } catch (error) {

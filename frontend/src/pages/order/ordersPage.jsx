@@ -15,6 +15,7 @@ export default function OrderListPage() {
         if (response.data.success) {
           setOrders(response.data.data);
         }
+        window.dispatchEvent(new Event('cartUpdated'));
       } catch (err) {
         console.error("Lỗi lấy danh sách đơn hàng:", err);
         setError(err.response?.data?.message || 'Không thể tải danh sách đơn hàng.');
@@ -27,28 +28,27 @@ export default function OrderListPage() {
   }, []);
 
   const handleCancelOrder = async (orderId) => {
-  if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
-    try {
-      // Truyền orderId vào trong object ở tham số thứ 2 của axios.put
-      const response = await axios.put('api/orders/cancel', 
-        { orderId }, 
-        { withCredentials: true }
-      );
+    if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
+      try {
+        const response = await axios.put('api/orders/cancel', 
+          { orderId }, 
+          { withCredentials: true }
+        );
 
-      if (response.data.success) {
-        setOrders(prev => prev.map(ord => {
-          if (ord._id === orderId) {
-            return { ...ord, orderStatus: "Đã hủy" };
-          }
-          return ord;
-        }));
-        alert('Hủy đơn hàng thành công.');
+        if (response.data.success) {
+          setOrders(prev => prev.map(ord => {
+            if (ord._id === orderId) {
+              return { ...ord, orderStatus: "Đã hủy" };
+            }
+            return ord;
+          }));
+          alert('Hủy đơn hàng thành công.');
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || 'Không thể hủy đơn hàng lúc này.');
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Không thể hủy đơn hàng lúc này.');
     }
-  }
-};
+  };
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}><p>Đang tải danh sách đơn hàng...</p></div>;
   if (error) return <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}><p>{error}</p></div>;
@@ -83,7 +83,8 @@ export default function OrderListPage() {
 
             <div style={{ marginBottom: '15px', background: '#f9f9f9', padding: '12px', borderRadius: '6px', fontSize: '14px' }}>
               <p style={{ margin: '4px 0' }}><strong>Người nhận:</strong> {order.shippingInfo.fullName} ({order.shippingInfo.phone})</p>
-              <p style={{ margin: '4px 0' }}><strong>Địa chỉ nhận:</strong> {order.shippingInfo.address} - Cơ sở nhận: <strong>{order.shippingInfo.local}</strong></p>
+              {/* Đã tách rõ ràng địa chỉ và cơ sở nhận */}
+              <p style={{ margin: '4px 0' }}><strong>Địa chỉ nhận:</strong> {order.shippingInfo.address} | <strong>Cơ sở nhận:</strong> {order.shippingInfo.local}</p>
               <p style={{ margin: '4px 0' }}><strong>Thanh toán:</strong> {order.paymentMethod} — <span style={{ color: order.isPaid ? 'green' : 'orange', fontWeight: 'bold' }}>{order.isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}</span></p>
             </div>
 
