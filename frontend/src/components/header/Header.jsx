@@ -8,11 +8,23 @@ const Header = ({ isOpen, setIsOpen }) => {
   const [uniqueItemCount, setUniqueItemCount] = useState(0);
   const userMenuRef = useRef(null);
 
+<<<<<<< HEAD
   // Hàm đọc dữ liệu user an toàn
   const getUserFromStorage = () => {
     try {
       const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
       return storedUser ? JSON.parse(storedUser) : null;
+=======
+  // Lấy trực tiếp user từ localStorage hoặc sessionStorage
+  const getUserFromStorage = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser
+        ? JSON.parse(storedUser)
+        : sessionStorage.getItem("user")
+          ? JSON.parse(sessionStorage.getItem("user"))
+          : null;
+>>>>>>> feature/orders-cart-checkout
     } catch (e) {
       return null;
     }
@@ -24,6 +36,7 @@ const Header = ({ isOpen, setIsOpen }) => {
   // Lấy avatar linh hoạt cả từ profile.avatar hoặc avatar gốc
   const userAvatar = currentUser?.profile?.avatar || currentUser?.avatar || "";
 
+<<<<<<< HEAD
   const fetchCartCount = async () => {
     try {
       const response = await axios.get("/api/cart/g", { withCredentials: true });
@@ -34,6 +47,31 @@ const Header = ({ isOpen, setIsOpen }) => {
       try {
         const savedCart = sessionStorage.getItem("cartItems");
         setUniqueItemCount(savedCart ? JSON.parse(savedCart).length : 0);
+=======
+  // Hàm gọi API lấy số lượng giỏ hàng từ Database
+  const fetchCartCount = async () => {
+    try {
+      // Chỉ gọi API khi user đã đăng nhập (có token/session)
+      const response = await axios.get("/api/cart/g", {
+        withCredentials: true,
+      });
+      if (response.data.success && Array.isArray(response.data.data)) {
+        // Đếm tổng số lượng loại sản phẩm hoặc tổng số lượng item tùy ý bạn
+        // Ở đây đếm số lượng loại sản phẩm khác nhau (độ dài mảng)
+        setUniqueItemCount(response.data.data.length);
+      }
+    } catch (error) {
+      console.error("Lỗi lấy số lượng giỏ hàng cho header:", error);
+      // Fallback xuống sessionStorage nếu gọi API lỗi
+      try {
+        const savedCart = sessionStorage.getItem("cartItems");
+        if (savedCart) {
+          const items = JSON.parse(savedCart);
+          setUniqueItemCount(items.length);
+        } else {
+          setUniqueItemCount(0);
+        }
+>>>>>>> feature/orders-cart-checkout
       } catch (e) {
         setUniqueItemCount(0);
       }
@@ -43,6 +81,7 @@ const Header = ({ isOpen, setIsOpen }) => {
   useEffect(() => {
     fetchCartCount();
 
+<<<<<<< HEAD
     // Cập nhật state ngay khi có sự kiện userUpdated
     const handleUserUpdated = () => {
       setCurrentUser(getUserFromStorage());
@@ -60,6 +99,19 @@ const Header = ({ isOpen, setIsOpen }) => {
       window.removeEventListener("userUpdated", handleUserUpdated);
       window.removeEventListener("cartUpdated", handleCartUpdated);
       window.removeEventListener("storage", handleUserUpdated);
+=======
+    // Lắng nghe sự kiện tùy chỉnh khi giỏ hàng thay đổi (ví dụ: CRUD trong CartPage)
+    const handleCartUpdated = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdated);
+    window.addEventListener("storage", handleCartUpdated);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdated);
+      window.removeEventListener("storage", handleCartUpdated);
+>>>>>>> feature/orders-cart-checkout
     };
   }, []);
 
@@ -80,8 +132,24 @@ const Header = ({ isOpen, setIsOpen }) => {
           className={`menu-btn ${isOpen ? "active" : ""}`}
           onClick={() => setIsOpen(!isOpen)}
         >
+<<<<<<< HEAD
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+=======
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+>>>>>>> feature/orders-cart-checkout
           </svg>
         </button>
         <Link className="logo" to="/">
@@ -90,6 +158,7 @@ const Header = ({ isOpen, setIsOpen }) => {
       </div>
 
       <div className="header-right">
+<<<<<<< HEAD
         <Link
           to="/cart"
           className="icon-btn"
@@ -97,17 +166,61 @@ const Header = ({ isOpen, setIsOpen }) => {
           title="Giỏ hàng"
         >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+=======
+        {/* Link đến trang giỏ hàng kèm badge số lượng */}
+        <Link
+          to="/cart"
+          className="icon-btn"
+          style={{
+            position: "relative",
+            display: "inline-flex",
+            alignItems: "center",
+            textDecoration: "none",
+            color: "inherit",
+          }}
+          title="Giỏ hàng"
+        >
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+>>>>>>> feature/orders-cart-checkout
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+            />
           </svg>
           {uniqueItemCount > 0 && (
             <span
               className="badge"
               style={{
+<<<<<<< HEAD
                 position: "absolute", top: "2px", right: "2px", backgroundColor: "#e74c3c", color: "#fff",
                 fontSize: "9px", fontWeight: "bold", minWidth: "15px", height: "15px", borderRadius: "50%",
                 display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #fff"
+=======
+                position: "absolute",
+                top: "2px",
+                right: "2px",
+                backgroundColor: "#e74c3c",
+                color: "#fff",
+                fontSize: "9px",
+                fontWeight: "bold",
+                minWidth: "15px",
+                height: "15px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1.5px solid #fff",
+>>>>>>> feature/orders-cart-checkout
               }}
             >
               {uniqueItemCount}
@@ -120,28 +233,58 @@ const Header = ({ isOpen, setIsOpen }) => {
             className={`icon-btn user-btn ${showUserMenu ? "active" : ""}`}
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
+<<<<<<< HEAD
             {userAvatar ? (
+=======
+            {userAvatar !== "" ? (
+>>>>>>> feature/orders-cart-checkout
               <img
                 src={userAvatar}
                 alt="User Avatar"
                 style={{
+<<<<<<< HEAD
                   width: "28px",
                   height: "28px",
                   borderRadius: "50%",
                   objectFit: "cover",
                   display: "block"
+=======
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  display: "block",
+>>>>>>> feature/orders-cart-checkout
                 }}
               />
             ) : (
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
             )}
           </button>
 
+<<<<<<< HEAD
           <div className={`user-dropdown-wrapper ${showUserMenu ? "active" : ""}`}>
             {/* Truyền user mới xuống UserMenu để đồng bộ thông tin trong menu thả xuống */}
             <UserMenu user={currentUser} />
+=======
+          <div
+            className={`user-dropdown-wrapper ${showUserMenu ? "active" : ""}`}
+          >
+            <UserMenu />
+>>>>>>> feature/orders-cart-checkout
           </div>
         </div>
       </div>

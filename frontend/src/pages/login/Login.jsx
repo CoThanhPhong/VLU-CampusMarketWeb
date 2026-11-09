@@ -35,6 +35,8 @@ const Login = () => {
 
       if (rememberMe) {
         localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        sessionStorage.setItem('user', JSON.stringify(data.user));
       }
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công
