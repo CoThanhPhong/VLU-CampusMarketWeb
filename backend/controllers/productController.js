@@ -42,22 +42,69 @@ const createProduct = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     let product;
-    // Kiểm tra nếu request body không có _id hoặc trống thì trả về toàn bộ danh sách sản phẩm (có populate đầy đủ profile của author)
+    let totalProducts = 0;
+
     if (!req.body || Object.keys(req.body).length === 0 || !req.body._id) {
-      product = await Product.find({}).populate({
-        path: 'author',
-        populate: { path: 'profile' } // Populate sâu vào profile để lấy tên và avatar thật của người dùng
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const skip = (page - 1) * limit;
+
+      // Xây dựng điều kiện lọc (Query Filter) động
+      let filter = {
+        amount: { $gt: 0 },          // Chỉ lấy sản phẩm còn số lượng > 0
+        status: { $ne: 'Hết hàng' }  // Loại bỏ sản phẩm hết hàng
+      };
+
+      // Nếu có từ khóa tìm kiếm theo tên
+      if (req.query.search && req.query.search.trim() !== '') {
+        filter.name = { $regex: req.query.search.trim(), $options: 'i' };
+      }
+
+      // Nếu có lọc theo loại thiết bị
+      if (req.query.category && req.query.category !== 'all') {
+        filter.deviceType = req.query.category;
+      }
+
+      // Nếu có lọc theo cơ sở
+      if (req.query.local && req.query.local !== 'all') {
+        filter.local = req.query.local;
+      }
+
+      // Đếm tổng số sản phẩm thỏa mãn điều kiện lọc
+      totalProducts = await Product.countDocuments(filter);
+
+      // Truy vấn sản phẩm theo điều kiện, phân trang và sắp xếp mới nhất
+      product = await Product.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({
+          path: 'author',
+          populate: { path: 'profile' }
+        });
+
+      return res.status(200).json({ 
+        success: true, 
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit) || 1,
+        totalProducts: totalProducts,
+        count: product.length, 
+        data: product 
       });
+
     } else {
+      // Trường hợp lấy chi tiết 1 sản phẩm theo _id
       product = await Product.findById(req.body._id).populate({
         path: 'author',
         populate: { path: 'profile' }
       });
+
       if (!product) {
         return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
       }
+
+      return res.status(200).json({ count: 1, success: true, data: product });
     }
-    res.status(200).json({ count: Array.isArray(product) ? product.length : 1, success: true, data: product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// Nhớ kiểm tra lại đường dẫn tới ProductCard cho đúng với cấu trúc thư mục của bạn
 import ProductCard from "../../components/Route/ProductCard";
 
 export default function ProductList() {
@@ -11,99 +10,112 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocal, setSelectedLocal] = useState('all');
 
-  // Hàm gọi API lấy danh sách sản phẩm và lưu cache
-  const fetchProductsFromAPI = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const limit = 20;
+
+  // Hàm gọi API có truyền kèm từ khóa tìm kiếm và bộ lọc xuống server
+  const fetchProducts = (page = 1, search = '', category = 'all', local = 'all') => {
     setLoading(true);
-    axios.get('/api/products/g')
+    let url = `/api/products/g?page=${page}&limit=${limit}`;
+    if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+    if (category !== 'all') url += `&category=${category}`;
+    if (local !== 'all') url += `&local=${encodeURIComponent(local)}`;
+
+    axios.get(url)
       .then((res) => {
         if (res.data.success) {
-          const rawProducts = res.data.data || [];
-          setProducts(rawProducts);
-          sessionStorage.setItem('productsCache', JSON.stringify(rawProducts));
+          setProducts(res.data.data || []);
+          setCurrentPage(res.data.currentPage || 1);
+          setTotalPages(res.data.totalPages || 1);
+          setTotalProducts(res.data.totalProducts || 0);
         }
       })
       .catch((err) => console.error('Lỗi API:', err))
       .finally(() => setLoading(false));
   };
 
+  // Gọi API mỗi khi trang hiện tại, từ khóa tìm kiếm hoặc bộ lọc thay đổi
   useEffect(() => {
-    // 1. Kiểm tra xem người dùng có vừa bấm F5 (reload) trình duyệt hay không
-    const navEntries = performance.getEntriesByType('navigation');
-    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    fetchProducts(currentPage, searchTerm, selectedCategory, selectedLocal);
 
-    const cachedData = sessionStorage.getItem('productsCache');
-
-    // 2. Nếu là F5 hoặc chưa có cache -> Gọi API mới từ server
-    if (isReload || !cachedData) {
-      fetchProductsFromAPI();
-    } else {
-      // 3. Nếu chuyển trang nội bộ bình thường -> Lấy từ cache cho mượt
-      try {
-        setProducts(JSON.parse(cachedData));
-      } catch (e) {
-        setProducts([]);
-      }
-      setLoading(false);
-    }
-
-    // 4. Lắng nghe sự kiện cập nhật sản phẩm toàn hệ thống
     const handleProductsUpdated = () => {
-      fetchProductsFromAPI();
+      fetchProducts(currentPage, searchTerm, selectedCategory, selectedLocal);
     };
 
     window.addEventListener('productsUpdated', handleProductsUpdated);
     return () => {
       window.removeEventListener('productsUpdated', handleProductsUpdated);
     };
-  }, []);
+  }, [currentPage, searchTerm, selectedCategory, selectedLocal]);
 
-  // Lọc và sắp xếp sản phẩm (Sắp xếp mới nhất lên đầu, lọc bỏ sản phẩm hết hàng hoặc amount <= 0)
-  const filteredProducts = useMemo(() => {
-    // Sắp xếp theo ngày tạo mới nhất (createdAt hoặc startDate) giảm dần
-    const sorted = [...products].sort((a, b) => {
-      const dateA = new Date(a.createdAt || a.startDate || 0);
-      const dateB = new Date(b.createdAt || b.startDate || 0);
-      return dateB - dateA; // Mới nhất xếp trước
-    });
+  // Reset về trang 1 ngay khi người dùng gõ tìm kiếm hoặc bấm đổi bộ lọc
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
-    return sorted.filter((item) => {
-      const inStock = (item.amount || 0) > 0 && item.status !== 'Hết hàng'; // Loại bỏ sản phẩm hết hàng
-      const matchSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchCategory = selectedCategory === 'all' || item.deviceType === selectedCategory;
-      const matchLocal = selectedLocal === 'all' || item.local === selectedLocal;
-      
-      return inStock && matchSearch && matchCategory && matchLocal;
-    });
-  }, [products, searchTerm, selectedCategory, selectedLocal]);
+  const handleCategoryChange = (catId) => {
+    setSelectedCategory(catId);
+    setCurrentPage(1);
+  };
+
+  const handleLocalChange = (e) => {
+    setSelectedLocal(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    range.push(1);
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+      if (i < totalPages && i > 1) range.push(i);
+    }
+    if (totalPages > 1) range.push(totalPages);
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) rangeWithDots.push(l + 1);
+        else if (i - l !== 1) rangeWithDots.push('...');
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+    return rangeWithDots;
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '40px' }}>
       
-      {/* CÔNG CỤ TÌM KIẾM VÀ LỌC */}
+      {/* THANH TÌM KIẾM VÀ LỌC */}
       <div style={{
         backgroundColor: '#ffffff', borderRadius: '10px', padding: '16px',
         border: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: '12px',
         alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px'
       }}>
-        {/* Ô Tìm kiếm */}
         <div style={{ flex: '1 1 240px', position: 'relative' }}>
           <input
             type="text"
             placeholder="Tìm theo tên thiết bị..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             style={{
               width: '100%', padding: '9px 12px 9px 36px', borderRadius: '6px',
               border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', boxSizing: 'border-box'
             }}
           />
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
         </div>
 
-        {/* Lọc loại máy */}
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
             { id: 'all', label: 'Tất cả' },
@@ -114,7 +126,7 @@ export default function ProductList() {
           ].map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => handleCategoryChange(cat.id)}
               style={{
                 padding: '6px 14px', borderRadius: '6px', border: 'none', fontSize: '13px',
                 fontWeight: '500', cursor: 'pointer',
@@ -127,10 +139,9 @@ export default function ProductList() {
           ))}
         </div>
 
-        {/* Lọc cơ sở */}
         <select
           value={selectedLocal}
-          onChange={(e) => setSelectedLocal(e.target.value)}
+          onChange={handleLocalChange}
           style={{
             padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
             fontSize: '13px', color: '#334155', outline: 'none', backgroundColor: '#ffffff', cursor: 'pointer'
@@ -143,28 +154,108 @@ export default function ProductList() {
         </select>
       </div>
 
-      {/* SỐ LƯỢNG SẢN PHẨM */}
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-          Danh sách bài đăng bán ({filteredProducts.length})
+          Danh sách bài đăng bán ({totalProducts})
         </h2>
       </div>
 
-      {/* DANH SÁCH BÀI ĐĂNG */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '14px' }}>Đang tải dữ liệu...</div>
-      ) : filteredProducts.length === 0 ? (
+      ) : products.length === 0 ? (
         <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '30px', textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0' }}>
           Không tìm thấy bài đăng phù hợp.
         </div>
       ) : (
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px'
-        }}>
-          {filteredProducts.map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
-        </div>
+        <>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px'
+          }}>
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+
+          {/* THANH PHÂN TRANG */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '35px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                  backgroundColor: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === 1 ? '#94a3b8' : '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: '500', fontSize: '12px'
+                }}
+              >
+                &laquo; Đầu
+              </button>
+
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                  backgroundColor: currentPage === 1 ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === 1 ? '#94a3b8' : '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontWeight: '500', fontSize: '12px'
+                }}
+              >
+                &lsaquo; Trước
+              </button>
+
+              {getPageNumbers().map((item, index) => {
+                if (item === '...') {
+                  return <span key={index} style={{ padding: '0 4px', color: '#64748b' }}>...</span>;
+                }
+                const isSelected = currentPage === item;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(item)}
+                    style={{
+                      minWidth: '34px', height: '34px', padding: '0 6px', borderRadius: '6px',
+                      border: isSelected ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                      backgroundColor: isSelected ? '#2563eb' : '#ffffff',
+                      color: isSelected ? '#ffffff' : '#334155',
+                      fontWeight: isSelected ? '700' : '500', fontSize: '13px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                  backgroundColor: currentPage === totalPages ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === totalPages ? '#94a3b8' : '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: '500', fontSize: '12px'
+                }}
+              >
+                Sau &rsaquo;
+              </button>
+
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                  backgroundColor: currentPage === totalPages ? '#f1f5f9' : '#ffffff',
+                  color: currentPage === totalPages ? '#94a3b8' : '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontWeight: '500', fontSize: '12px'
+                }}
+              >
+                Cuối &raquo;
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

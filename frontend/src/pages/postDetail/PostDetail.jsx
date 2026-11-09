@@ -112,10 +112,12 @@ export default function PostDetail() {
   const available = product.status === "Còn hàng" && product.amount > 0;
 
   let imageList = [];
-  if (Array.isArray(product.images) && product.images.length > 0) {
-    imageList = product.images.slice(0, 5);
-  } else if (product.img) {
+  if (Array.isArray(product.img) && product.img.length > 0) {
+    imageList = product.img.filter(Boolean).slice(0, 5);
+  } else if (typeof product.img === 'string' && product.img.trim() !== '') {
     imageList = [product.img];
+  } else if (Array.isArray(product.images) && product.images.length > 0) {
+    imageList = product.images.filter(Boolean).slice(0, 5);
   }
 
   const handleDecrease = () => setQty(q => Math.max(1, q - 1));

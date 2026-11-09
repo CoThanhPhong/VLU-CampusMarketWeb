@@ -20,6 +20,29 @@ export default function ProductCard({ product }) {
     mac: 'Macbook' 
   };
 
+  // [ĐÃ FIX] Lấy ảnh chính xác từ mọi định dạng (Mảng img, Chuỗi đơn, hoặc mảng images)
+  const getProductImage = () => {
+    // 1. Kiểm tra nếu product.img là mảng
+    if (Array.isArray(product?.img) && product.img.length > 0) {
+      const firstValidImg = product.img.find(img => typeof img === 'string' && img.trim() !== '');
+      if (firstValidImg) return firstValidImg;
+    }
+    
+    // 2. Kiểm tra nếu product.img là chuỗi đơn
+    if (typeof product?.img === 'string' && product.img.trim() !== '') {
+      return product.img;
+    }
+
+    // 3. Dự phòng trường hợp lưu ở trường product.images
+    if (Array.isArray(product?.images) && product.images.length > 0) {
+      const firstValidImages = product.images.find(img => typeof img === 'string' && img.trim() !== '');
+      if (firstValidImages) return firstValidImages;
+    }
+
+    // Fallback mặc định nếu không có ảnh nào
+    return 'https://via.placeholder.com/300x170?text=No+Image';
+  };
+
   // Hàm chuyển đổi thời gian sang dạng tương đối (vừa xong, x phút trước, x giờ trước...)
   const formatTimeAgo = (dateString) => {
     if (!dateString) return 'Gần đây';
@@ -211,7 +234,7 @@ export default function ProductCard({ product }) {
         {/* HÌNH ẢNH SẢN PHẨM VÀ CÁC NHÃN */}
         <div style={{ position: 'relative', width: '100%', height: '170px', backgroundColor: '#f1f5f9' }}>
           <img 
-            src={product?.img || 'https://via.placeholder.com/300x170?text=No+Image'} 
+            src={getProductImage()} 
             alt={product?.name} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             onError={(e) => { e.target.src = 'https://via.placeholder.com/300x170?text=Lỗi+Ảnh'; }}
@@ -248,8 +271,12 @@ export default function ProductCard({ product }) {
 
         {/* THÔNG TIN CHI TIẾT SẢN PHẨM */}
         <div style={{ padding: '12px' }}>
-          {/* Thay thế thẻ h3 bằng thẻ div thông thường để không bị dính khoảng cách mặc định */}
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#0f172a', margin: '0 0 2px 0', lineHeight: '1.3', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+          {/* Tên sản phẩm dùng thẻ div để không bị khoảng cách lớn với giá tiền */}
+          <div style={{ 
+            fontSize: '15px', fontWeight: '600', color: '#0f172a', 
+            margin: '0 0 4px 0', lineHeight: '1.3', 
+            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' 
+          }}>
             {product?.name}
           </div>
           <div style={{ fontSize: '16px', fontWeight: '700', color: '#dc2626', marginBottom: '6px' }}>

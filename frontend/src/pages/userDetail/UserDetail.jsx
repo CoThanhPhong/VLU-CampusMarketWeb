@@ -53,7 +53,6 @@ export default function UserDetail() {
           const storedUserStr = sessionStorage.getItem("user") || localStorage.getItem("user");
           if (storedUserStr) {
             const parsedStored = JSON.parse(storedUserStr);
-            // Kiểm tra cấu trúc xem có phải object chứa profile hoặc phẳng
             rawUser = parsedStored.profile ? { ...parsedStored, ...parsedStored.profile } : parsedStored;
           }
         }
@@ -82,10 +81,19 @@ export default function UserDetail() {
 
         setUser(normalized);
 
-        // Lấy danh sách sản phẩm của user này
+        // Lấy danh sách sản phẩm của user này và sắp xếp mới nhất lên đầu
         const allProducts = await getProducts();
         if (!alive) return;
-        setProducts(allProducts.filter((item) => getProductOwnerId(item) === String(id)));
+        
+        const userProducts = allProducts
+          .filter((item) => getProductOwnerId(item) === String(id))
+          .sort((a, b) => {
+            const dateA = new Date(a.createdAt || a.startDate || 0);
+            const dateB = new Date(b.createdAt || b.startDate || 0);
+            return dateB - dateA; // Bài viết mới nhất sẽ đứng đầu danh sách
+          });
+
+        setProducts(userProducts);
 
       } catch (err) {
         if (alive) {
@@ -103,7 +111,7 @@ export default function UserDetail() {
     return () => { 
       alive = false; 
     };
-  }, [id, isCurrentUser]); // Theo dõi thêm `isCurrentUser` để kích hoạt lại khi trạng thái user thay đổi
+  }, [id, isCurrentUser]);
 
   const filteredProducts = useMemo(() => products.filter((item) =>
     String(item.name || "").toLowerCase().includes(query.toLowerCase())
@@ -123,7 +131,6 @@ export default function UserDetail() {
       
       {/* Khung profile chính */}
       <div className="profile-cover card-surface" style={{ position: "relative" }}>
-        {/* Chỉ hiển thị nút chỉnh sửa nếu đúng là current user */}
         {isCurrentUser && (
           <Link to={`/settingProfile`} className="profile-settings-icon-btn" title="Chỉnh sửa hồ sơ">
             <Pencil size={18} />
