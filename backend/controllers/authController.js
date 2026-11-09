@@ -3,7 +3,7 @@ const axios = require("axios");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 const UserInfo = require("../middleware/userInfo");
-const User = require("../models/User"); // Đảm bảo đã require model User nếu chưa có
+const User = require("../models/User");
 
 exports.login = async (req, res) => {
   try {
@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
     const populatedUser = await User.findById(user._id).populate('profile');
 
     const token = jwt.sign(
-      { id: user._id, mssv: mssv, role: user.role }, 
+      { id: user.id, mssv: mssv, role: user.role }, 
       process.env.JWT_SECRET || "VLU_SECRET_KEY", 
       { expiresIn: "1d" },
     );
