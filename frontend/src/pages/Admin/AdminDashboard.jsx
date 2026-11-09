@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ShieldAlert, Users, Package, Trash2, ArrowLeft, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldAlert, Users, Package, Trash2, ArrowLeft, CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -68,10 +68,21 @@ export default function AdminDashboard() {
       if (resProducts.data.success) {
         let prodData = resProducts.data.data || [];
         
-        // Sắp xếp: Ưu tiên bài 'Chờ duyệt' lên đầu danh sách
+        // Sắp xếp: Ưu tiên 'Chờ duyệt' lên đầu tiên, kế đến là 'Bị từ chối'
         prodData.sort((a, b) => {
-          if ((!a.status || a.status === 'Chờ duyệt') && (b.status && b.status !== 'Chờ duyệt')) return -1;
-          if ((a.status && a.status !== 'Chờ duyệt') && (!b.status || b.status === 'Chờ duyệt')) return 1;
+          const statusA = a.status || 'Chờ duyệt';
+          const statusB = b.status || 'Chờ duyệt';
+          
+          const getPriority = (st) => {
+            if (st === 'Chờ duyệt') return 1;
+            if (st === 'Bị từ chối') return 2;
+            return 3; 
+          };
+
+          const pA = getPriority(statusA);
+          const pB = getPriority(statusB);
+
+          if (pA !== pB) return pA - pB;
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
@@ -128,9 +139,8 @@ export default function AdminDashboard() {
       );
       
       alert(`Đã ${actionName} các bài đăng đã chọn thành công!`);
-      const updatedStatus = statusType === 'Đã duyệt' ? 'Còn hàng' : 'Từ chối';
-      setProducts(products.map(p => selectedProductIds.includes(p._id) ? { ...p, status: updatedStatus } : p));
       setSelectedProductIds([]);
+      fetchAllAdminData(productPage);
     } catch (err) {
       console.error('Lỗi thao tác hàng loạt sản phẩm:', err);
       alert('Có lỗi xảy ra khi thực hiện thao tác.');
@@ -224,8 +234,8 @@ export default function AdminDashboard() {
     try {
       const res = await axios.put('/api/products/update-status', { productId, status: statusType });
       if (res.data.success) {
-        alert(`Đã ${statusType} bài đăng thành công!`);
-        setProducts(products.map(p => p._id === productId ? { ...p, status: statusType === 'Đã duyệt' ? 'Còn hàng' : 'Từ chối' } : p));
+        alert(`Đã ${statusType} bài viết thành công!`);
+        fetchAllAdminData(productPage);
       }
     } catch (err) {
       alert('Lỗi thao tác: ' + (err.response?.data?.message || err.message));
@@ -288,14 +298,55 @@ export default function AdminDashboard() {
     }
   };
 
+  // --- HÀM TẠO MẢNG SỐ TRANG CÓ DẤU CHẤM LỬNG (...) ---
+  const getPaginationPages = () => {
+    const pages = [];
+    const maxVisiblePages = 5; // Số lượng nút trang tối đa hiển thị trực tiếp
+
+    if (totalPages <= maxVisiblePages + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      let start = Math.max(2, productPage - 1);
+      let end = Math.min(totalPages - 1, productPage + 1);
+
+      if (productPage <= 3) {
+        end = 4;
+      } else if (productPage >= totalPages - 2) {
+        start = totalPages - 3;
+      }
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   if (!isAdmin) return null;
 
   if (loading && products.length === 0) {
     return <div style={{ textAlign: 'center', padding: '80px 0', fontSize: '16px', color: '#64748b' }}>Đang tải dữ liệu hệ thống...</div>;
   }
 
-  const hasActionableSelectedProducts = products.some(
-    p => selectedProductIds.includes(p._id) && (!p.status || p.status === 'Chờ duyệt' || p.status === 'Từ chối')
+  // Điều kiện hiển thị nút hành động hàng loạt
+  const hasApprovableSelected = products.some(
+    p => selectedProductIds.includes(p._id) && (!p.status || p.status === 'Chờ duyệt' || p.status === 'Bị từ chối')
+  );
+  const hasPendingSelected = products.some(
+    p => selectedProductIds.includes(p._id) && (!p.status || p.status === 'Chờ duyệt')
   );
 
   return (
@@ -336,7 +387,7 @@ export default function AdminDashboard() {
           Kiểm duyệt Bài đăng ({totalProductsCount})
         </button>
         <button onClick={() => setActiveTab('users')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '14px', cursor: 'pointer', backgroundColor: activeTab === 'users' ? '#2563eb' : '#f1f5f9', color: activeTab === 'users' ? '#fff' : '#475569' }}>
-          Quản lý Người dùng & Phân quyền ({usersList.length})
+          Quản lý Người dùng  ({usersList.length})
         </button>
       </div>
 
@@ -349,15 +400,15 @@ export default function AdminDashboard() {
               <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Danh sách bài đăng hệ thống</span>
               {selectedProductIds.length > 0 && (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {hasActionableSelectedProducts && (
-                    <>
-                      <button onClick={() => handleBulkUpdateProductStatus('Đã duyệt')} style={{ padding: '6px 12px', backgroundColor: '#dcfce7', color: '#16a34a', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <CheckCircle size={14} /> Duyệt ({selectedProductIds.length})
-                      </button>
-                      <button onClick={() => handleBulkUpdateProductStatus('Từ chối')} style={{ padding: '6px 12px', backgroundColor: '#fef3c7', color: '#d97706', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <XCircle size={14} /> Từ chối ({selectedProductIds.length})
-                      </button>
-                    </>
+                  {hasApprovableSelected && (
+                    <button onClick={() => handleBulkUpdateProductStatus('Đã duyệt')} style={{ padding: '6px 12px', backgroundColor: '#dcfce7', color: '#16a34a', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <CheckCircle size={14} /> Duyệt ({selectedProductIds.length})
+                    </button>
+                  )}
+                  {hasPendingSelected && (
+                    <button onClick={() => handleBulkUpdateProductStatus('Từ chối')} style={{ padding: '6px 12px', backgroundColor: '#fef3c7', color: '#d97706', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <XCircle size={14} /> Từ chối ({selectedProductIds.length})
+                    </button>
                   )}
                   <button onClick={handleDeleteSelectedProducts} style={{ padding: '6px 12px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Trash2 size={14} /> Xóa ({selectedProductIds.length})
@@ -384,6 +435,10 @@ export default function AdminDashboard() {
                 <tbody>
                   {products.map((item) => {
                     const isSelected = selectedProductIds.includes(item._id);
+                    const isPending = !item.status || item.status === 'Chờ duyệt';
+                    const isRejected = item.status === 'Bị từ chối';
+                    const isAvailable = item.status === 'Còn hàng' || item.status === 'Đã duyệt';
+                    const isSoldOut = item.status === 'Hết hàng' || item.amount === 0;
 
                     return (
                       <tr key={item._id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: isSelected ? '#f8fafc' : 'transparent' }}>
@@ -397,12 +452,19 @@ export default function AdminDashboard() {
                         <td style={{ padding: '12px 16px', color: '#dc2626', fontWeight: '700' }}>{item.price?.toLocaleString('vi-VN')} VNĐ</td>
                         <td style={{ padding: '12px 16px', color: '#475569' }}>{item.local}</td>
                         <td style={{ padding: '12px 16px' }}>
-                          <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', backgroundColor: item.status === 'Chờ duyệt' ? '#fef3c7' : item.status === 'Từ chối' ? '#fee2e2' : '#dcfce7', color: item.status === 'Chờ duyệt' ? '#d97706' : item.status === 'Từ chối' ? '#991b1b' : '#16a34a' }}>
-                            {item.status || 'Chờ duyệt'}
+                          <span style={{ 
+                            padding: '4px 8px', 
+                            borderRadius: '4px', 
+                            fontSize: '11px', 
+                            fontWeight: '600', 
+                            backgroundColor: isAvailable ? '#dcfce7' : isSoldOut ? '#f1f5f9' : isPending ? '#fef3c7' : '#fee2e2', 
+                            color: isAvailable ? '#16a34a' : isSoldOut ? '#475569' : isPending ? '#d97706' : '#991b1b' 
+                          }}>
+                            {isSoldOut ? 'Hết hàng' : (item.status || 'Chờ duyệt')}
                           </span>
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '6px' }}>
-                          {(!item.status || item.status === 'Chờ duyệt') && (
+                          {isPending && (
                             <>
                               <button onClick={() => handleUpdateProductStatus(item._id, 'Đã duyệt')} style={{ padding: '6px 10px', backgroundColor: '#dcfce7', color: '#16a34a', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <CheckCircle size={13} /> Duyệt
@@ -412,11 +474,13 @@ export default function AdminDashboard() {
                               </button>
                             </>
                           )}
-                          {item.status === 'Từ chối' && (
+
+                          {isRejected && (
                             <button onClick={() => handleUpdateProductStatus(item._id, 'Đã duyệt')} style={{ padding: '6px 10px', backgroundColor: '#dcfce7', color: '#16a34a', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <CheckCircle size={13} /> Duyệt
                             </button>
                           )}
+
                           <button onClick={() => handleDeleteProduct(item._id)} style={{ padding: '6px 10px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             <Trash2 size={13} /> Xóa
                           </button>
@@ -428,36 +492,76 @@ export default function AdminDashboard() {
               </table>
             </div>
 
-            {/* THANH PHÂN TRANG CHUẨN XÁC (SERVER-SIDE) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
-              <span style={{ fontSize: '13px', color: '#64748b' }}>
-                Hiển thị trang {productPage} trên tổng số {totalPages} trang ({totalProductsCount} sản phẩm)
-              </span>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button 
-                  onClick={() => setProductPage(prev => Math.max(prev - 1, 1))} 
-                  disabled={productPage === 1}
-                  style={{ padding: '6px 12px', backgroundColor: productPage === 1 ? '#e2e8f0' : '#ffffff', color: productPage === 1 ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '600' }}
-                >
-                  <ChevronLeft size={16} /> Trước
-                </button>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>
-                  Trang {productPage} / {totalPages}
-                </span>
-                <button 
-                  onClick={() => setProductPage(prev => Math.min(prev + 1, totalPages))} 
-                  disabled={productPage === totalPages}
-                  style={{ padding: '6px 12px', backgroundColor: productPage === totalPages ? '#e2e8f0' : '#ffffff', color: productPage === totalPages ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: '600' }}
-                >
-                  Sau <ChevronRight size={16} />
-                </button>
-              </div>
+            {/* THANH PHÂN TRANG THÔNG MINH (CÓ DẤU CHẤM LỬNG ...) */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', padding: '16px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+              <button 
+                onClick={() => setProductPage(1)} 
+                disabled={productPage === 1}
+                style={{ padding: '6px 10px', backgroundColor: productPage === 1 ? '#e2e8f0' : '#ffffff', color: productPage === 1 ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === 1 ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center' }}
+                title="Trang đầu"
+              >
+                <ChevronsLeft size={16} />
+              </button>
+
+              <button 
+                onClick={() => setProductPage(prev => Math.max(prev - 1, 1))} 
+                disabled={productPage === 1}
+                style={{ padding: '6px 12px', backgroundColor: productPage === 1 ? '#e2e8f0' : '#ffffff', color: productPage === 1 ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === 1 ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px' }}
+              >
+                <ChevronLeft size={16} /> Trước
+              </button>
+
+              {getPaginationPages().map((item, index) => {
+                if (item === '...') {
+                  return (
+                    <span key={`ellipsis-${index}`} style={{ padding: '6px 10px', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>
+                      ...
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item}
+                    onClick={() => setProductPage(item)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: productPage === item ? '#2563eb' : '#ffffff',
+                      color: productPage === item ? '#ffffff' : '#334155',
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+
+              <button 
+                onClick={() => setProductPage(prev => Math.min(prev + 1, totalPages))} 
+                disabled={productPage === totalPages}
+                style={{ padding: '6px 12px', backgroundColor: productPage === totalPages ? '#e2e8f0' : '#ffffff', color: productPage === totalPages ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === totalPages ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '2px' }}
+              >
+                Sau <ChevronRight size={16} />
+              </button>
+
+              <button 
+                onClick={() => setProductPage(totalPages)} 
+                disabled={productPage === totalPages}
+                style={{ padding: '6px 10px', backgroundColor: productPage === totalPages ? '#e2e8f0' : '#ffffff', color: productPage === totalPages ? '#94a3b8' : '#334155', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: productPage === totalPages ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center' }}
+                title="Trang cuối"
+              >
+                <ChevronsRight size={16} />
+              </button>
             </div>
           </>
         ) : (
           <>
             <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-              <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Danh sách người dùng hệ thống & Phân quyền</span>
+              <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Danh sách người dùng hệ thống </span>
               {selectedUserIds.length > 0 && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button onClick={() => handleBulkUpdateUserRole('admin')} style={{ padding: '6px 12px', backgroundColor: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>

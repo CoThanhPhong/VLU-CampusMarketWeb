@@ -62,14 +62,25 @@ const getProductById = async (req, res) => {
       if (!isAdminRequest) {
         filter.amount = { $gt: 0 };
         filter.status = { $in: ['Còn hàng', 'Đã duyệt'] };
-        // ... các bộ lọc tìm kiếm khác nếu có
       }
 
-      // Đếm tổng số bản ghi thực tế trong database khớp với điều kiện
       totalProducts = await Product.countDocuments(filter);
 
+      // [QUAN TRỌNG] Nếu là Admin, ưu tiên sắp xếp: 
+      // 1. 'Chờ duyệt' lên trên cùng
+      // 2. 'Bị từ chối' / 'Từ chối' kế tiếp
+      // 3. Các trạng thái khác và mới tạo nhất nằm sau cùng
+      let sortCondition = { createdAt: -1 };
+      
+      if (isAdminRequest) {
+        // Dùng aggregation hoặc sort dựa trên trọng số trạng thái
+        // Trong Mongoose sort đơn giản với chuỗi: 
+        // Ta sắp xếp status tăng dần kết hợp thời gian tạo mới nhất
+        sortCondition = { status: 1, createdAt: -1 };
+      }
+
       product = await Product.find(filter)
-        .sort({ createdAt: -1 })
+        .sort(sortCondition)
         .skip(skip)
         .limit(limit)
         .populate({
@@ -81,7 +92,7 @@ const getProductById = async (req, res) => {
         success: true, 
         currentPage: page,
         totalPages: Math.ceil(totalProducts / limit) || 1,
-        totalProducts: totalProducts, // Tổng số lượng thực tế (ví dụ: 59)
+        totalProducts: totalProducts,
         count: product.length, 
         data: product 
       });
@@ -154,7 +165,6 @@ const updateProductStatus = async (req, res) => {
 // 5. DELETE: Xóa sản phẩm theo ID
 const deleteProduct = async (req, res) => {
   try {
-    // Hỗ trợ lấy id từ cả body.productId lẫn body._id hoặc params
     const productId = req.body.productId || req.body._id || req.params.id;
     
     if (!productId) {
