@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -29,15 +30,79 @@ export default function ProductCard({ product }) {
     setQty(p => p < product.amount ? p + 1 : product.amount); 
   };
 
-  // Hàm xử lý nút Mua hàng
+  // 1. Hàm xử lý nút "Thêm giỏ hàng" (Gọi API /api/cart/u)
+  const handleAddToCart = async (e) => { 
+    e.stopPropagation(); 
+    if (!isAvailable) return;
+
+    try {
+      // Lấy giỏ hàng hiện tại từ sessionStorage hoặc khởi tạo mảng rỗng
+      let currentCart = [];
+      try {
+        const savedCart = sessionStorage.getItem('cartItems');
+        if (savedCart) currentCart = JSON.parse(savedCart);
+      } catch (err) {
+        currentCart = [];
+      }
+
+      // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+      const existingIndex = currentCart.findIndex(item => (item.product || item._id) === product._id);
+      
+      if (existingIndex > -1) {
+        // Nếu đã có, cộng dồn số lượng nhưng không vượt quá kho (`amount`)
+        const newQuantity = currentCart[existingIndex].quantity + qty;
+        currentCart[existingIndex].quantity = newQuantity <= product.amount ? newQuantity : product.amount;
+      } else {
+        // Nếu chưa có, thêm mới sản phẩm theo đúng cấu trúc giỏ hàng
+        currentCart.push({
+          _id: product._id,
+          product: product._id,
+          name: product.name,
+          price: product.price,
+          img: product.img,
+          amount: product.amount,
+          local: product.local || 'Cơ sở 1',
+          quantity: qty
+        });
+      }
+
+      // Gửi yêu cầu đồng bộ lên Server bằng API POST /api/cart/u
+      const response = await axios.post('/api/cart/u', { items: currentCart }, {
+        withCredentials: true
+      });
+
+      if (response.data.success) {
+        // Lưu lại dữ liệu trả về chuẩn từ server vào sessionStorage
+        sessionStorage.setItem('cartItems', JSON.stringify(response.data.data));
+        // Phát sự kiện toàn hệ thống để cập nhật Badge số lượng ở Header
+        window.dispatchEvent(new Event('cartUpdated'));
+        alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng thành công!`);
+      }
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      alert(error.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+    }
+  };
+
+  // 2. Hàm xử lý nút "Mua ngay" (Lưu tạm vào checkoutItems rồi chuyển hướng sang trang checkout)
   const handleBuyNow = (e) => { 
     e.stopPropagation(); 
-    alert(`Đã tiến hành thanh toán ${qty} sản phẩm.`); 
-  };
-  
-  const handleAddToCart = (e) => { 
-    e.stopPropagation(); 
-    alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng!`); 
+    if (!isAvailable) return;
+
+    // Đóng gói sản phẩm mua ngay thành một mảng danh sách thanh toán
+    const buyNowItem = [{
+      _id: product._id,
+      product: product._id,
+      name: product.name,
+      price: product.price,
+      img: product.img,
+      amount: product.amount,
+      local: product.local || 'Cơ sở 1',
+      quantity: qty
+    }];
+
+    sessionStorage.setItem('checkoutItems', JSON.stringify(buyNowItem));
+    navigate('/checkout');
   };
 
   return (
@@ -116,7 +181,7 @@ export default function ProductCard({ product }) {
           Người đăng: <b>{authorName}</b>
         </div>
 
-          {/* Hàng hiển thị Vị trí và Ngày đăng (Giữ nguyên từ bản cũ) */}
+          {/* Hàng hiển thị Vị trí và Ngày đăng */}
           <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,7 +201,7 @@ export default function ProductCard({ product }) {
             </div>
           </div>
 
-          {/* Bộ chọn số lượng mua (UI Mới) */}
+          {/* Bộ chọn số lượng mua */}
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#f8fafc' }}>
               <button onClick={handleDecrease} style={{ padding: '4px 10px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>

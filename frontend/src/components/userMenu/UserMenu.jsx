@@ -79,6 +79,14 @@ const UserMenu = () => {
         >
           Hồ sơ cá nhân
         </li>
+        <li 
+          className="user-dropdown-item" 
+          onClick={() => {
+            navigate(`/orders`);
+          }}
+        >
+          Lịch sử đơn hàng
+        </li>
         
         {/* Đã loại bỏ mục "Chỉnh sửa hồ sơ" theo yêu cầu */}
 
