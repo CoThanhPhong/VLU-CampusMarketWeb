@@ -15,12 +15,12 @@ export default function ProductList() {
   const [totalProducts, setTotalProducts] = useState(0);
   const limit = 20;
 
-  // Hàm gọi API có truyền kèm từ khóa tìm kiếm và bộ lọc xuống server
+  // Sửa từ 'category' thành 'deviceType' để khớp với Model database và Backend
   const fetchProducts = (page = 1, search = '', category = 'all', local = 'all') => {
     setLoading(true);
     let url = `/api/products/g?page=${page}&limit=${limit}`;
     if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
-    if (category !== 'all') url += `&category=${category}`;
+    if (category !== 'all') url += `&deviceType=${encodeURIComponent(category)}`;
     if (local !== 'all') url += `&local=${encodeURIComponent(local)}`;
 
     axios.get(url)
@@ -36,7 +36,6 @@ export default function ProductList() {
       .finally(() => setLoading(false));
   };
 
-  // Gọi API mỗi khi trang hiện tại, từ khóa tìm kiếm hoặc bộ lọc thay đổi
   useEffect(() => {
     fetchProducts(currentPage, searchTerm, selectedCategory, selectedLocal);
 
@@ -50,7 +49,6 @@ export default function ProductList() {
     };
   }, [currentPage, searchTerm, selectedCategory, selectedLocal]);
 
-  // Reset về trang 1 ngay khi người dùng gõ tìm kiếm hoặc bấm đổi bộ lọc
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -116,6 +114,7 @@ export default function ProductList() {
           />
         </div>
 
+        {/* Các nút phân loại thiết bị */}
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
             { id: 'all', label: 'Tất cả' },

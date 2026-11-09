@@ -68,19 +68,21 @@ export default function AdminDashboard() {
       if (resProducts.data.success) {
         let prodData = resProducts.data.data || [];
         
-        // Sắp xếp: Ưu tiên 'Chờ duyệt' lên đầu tiên, kế đến là 'Bị từ chối'
+        // Sắp xếp: Chờ duyệt (1) -> Bị từ chối (2) -> Còn hàng (3) -> Hết hàng (4)
         prodData.sort((a, b) => {
-          const statusA = a.status || 'Chờ duyệt';
-          const statusB = b.status || 'Chờ duyệt';
-          
-          const getPriority = (st) => {
-            if (st === 'Chờ duyệt') return 1;
+          const getPriority = (item) => {
+            const st = item.status;
+            // Kiểm tra trạng thái hết hàng dựa vào status hoặc amount = 0
+            const isSoldOut = st === 'Hết hàng' || item.amount === 0;
+
+            if (st === 'Chờ duyệt' || !st) return 1;
             if (st === 'Bị từ chối') return 2;
-            return 3; 
+            if (!isSoldOut && (st === 'Còn hàng' || st === 'Đã duyệt')) return 3;
+            return 4; // Hết hàng nằm ở cuối cùng
           };
 
-          const pA = getPriority(statusA);
-          const pB = getPriority(statusB);
+          const pA = getPriority(a);
+          const pB = getPriority(b);
 
           if (pA !== pB) return pA - pB;
           return new Date(b.createdAt) - new Date(a.createdAt);
@@ -301,7 +303,7 @@ export default function AdminDashboard() {
   // --- HÀM TẠO MẢNG SỐ TRANG CÓ DẤU CHẤM LỬNG (...) ---
   const getPaginationPages = () => {
     const pages = [];
-    const maxVisiblePages = 5; // Số lượng nút trang tối đa hiển thị trực tiếp
+    const maxVisiblePages = 5;
 
     if (totalPages <= maxVisiblePages + 2) {
       for (let i = 1; i <= totalPages; i++) {
@@ -384,10 +386,10 @@ export default function AdminDashboard() {
       {/* TABS */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
         <button onClick={() => setActiveTab('products')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '14px', cursor: 'pointer', backgroundColor: activeTab === 'products' ? '#2563eb' : '#f1f5f9', color: activeTab === 'products' ? '#fff' : '#475569' }}>
-          Kiểm duyệt Bài đăng ({totalProductsCount})
+          Quản lý bài viết ({totalProductsCount})
         </button>
         <button onClick={() => setActiveTab('users')} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: '600', fontSize: '14px', cursor: 'pointer', backgroundColor: activeTab === 'users' ? '#2563eb' : '#f1f5f9', color: activeTab === 'users' ? '#fff' : '#475569' }}>
-          Quản lý Người dùng  ({usersList.length})
+          Quản lý Người dùng ({usersList.length})
         </button>
       </div>
 
@@ -561,7 +563,7 @@ export default function AdminDashboard() {
         ) : (
           <>
             <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-              <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Danh sách người dùng hệ thống </span>
+              <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>Danh sách người dùng hệ thống</span>
               {selectedUserIds.length > 0 && (
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button onClick={() => handleBulkUpdateUserRole('admin')} style={{ padding: '6px 12px', backgroundColor: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>

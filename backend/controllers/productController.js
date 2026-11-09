@@ -46,10 +46,12 @@ const createProduct = async (req, res) => {
 };
 
 // 2. READ (Single/All): Lấy danh sách sản phẩm hoặc chi tiết một sản phẩm
+// 2. READ (Single/All): Lấy danh sách sản phẩm hoặc chi tiết một sản phẩm
 const getProductById = async (req, res) => {
   try {
     let product;
     let totalProducts = 0;
+    
 
     if (!req.body || Object.keys(req.body).length === 0 || !req.body._id) {
       const page = parseInt(req.query.page) || 1;
@@ -64,18 +66,30 @@ const getProductById = async (req, res) => {
         filter.status = { $in: ['Còn hàng', 'Đã duyệt'] };
       }
 
+      // --- [BỔ SUNG QUAN TRỌNG ĐỂ LỌC CHÍNH XÁC] ---
+      // Lọc theo loại sản phẩm (deviceType)
+      if (req.query.deviceType && req.query.deviceType !== 'all') {
+  // Giải mã chuỗi tiếng Việt nhận từ URL
+  const decodedDeviceType = decodeURIComponent(req.query.deviceType);
+  filter.deviceType = decodedDeviceType;
+}
+
+      // Lọc theo từ khóa tìm kiếm (search) nếu có
+      if (req.query.search) {
+        filter.name = { $regex: req.query.search, $options: 'i' };
+      }
+
+      // Lọc theo cơ sở (local) nếu có
+      if (req.query.local && req.query.local !== 'all') {
+        filter.local = req.query.local;
+      }
+      // ---------------------------------------------
+
       totalProducts = await Product.countDocuments(filter);
 
-      // [QUAN TRỌNG] Nếu là Admin, ưu tiên sắp xếp: 
-      // 1. 'Chờ duyệt' lên trên cùng
-      // 2. 'Bị từ chối' / 'Từ chối' kế tiếp
-      // 3. Các trạng thái khác và mới tạo nhất nằm sau cùng
       let sortCondition = { createdAt: -1 };
       
       if (isAdminRequest) {
-        // Dùng aggregation hoặc sort dựa trên trọng số trạng thái
-        // Trong Mongoose sort đơn giản với chuỗi: 
-        // Ta sắp xếp status tăng dần kết hợp thời gian tạo mới nhất
         sortCondition = { status: 1, createdAt: -1 };
       }
 
@@ -113,6 +127,7 @@ const getProductById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // 3. UPDATE: Cập nhật sản phẩm theo ID
 const updateProduct = async (req, res) => {
