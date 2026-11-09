@@ -1,0 +1,156 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+export default function CheckoutPage() {
+  const user = sessionStorage.getItem('user');
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: user ? JSON.parse(user).profile.name : '',
+    phone: user ? JSON.parse(user).profile.phone : '',
+    address: '',
+    local: 'Cơ sở 1',
+    paymentMethod: 'COD'
+  });
+
+  useEffect(() => {
+    const savedItems = sessionStorage.getItem('checkoutItems');
+    if (savedItems) {
+      setItems(JSON.parse(savedItems));
+    } else {
+      navigate('/cart');
+    }
+  }, [navigate]);
+
+  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleOrderSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const orderPayload = {
+      orderItems: items.map(item => ({
+        product: item.product,
+        quantity: item.quantity,
+        price: item.price,
+        local: item.local
+      })),
+      shippingInfo: {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+        local: formData.local
+      },
+      paymentMethod: formData.paymentMethod,
+      totalPrice: totalPrice
+    };
+
+    try {
+      const response = await axios.post('api/orders/c', orderPayload, {
+        withCredentials: true
+      });
+
+      if (response.data.success) {
+        alert('Đặt hàng thành công!');
+        sessionStorage.removeItem('checkoutItems');
+        sessionStorage.removeItem('cartItems');
+        window.dispatchEvent(new Event('cartUpdated'));
+        navigate('/orders');
+      }
+    } catch (error) {
+      console.error("Lỗi tạo đơn hàng:", error);
+      alert(error.response?.data?.message || 'Đặt hàng thất bại, vui lòng kiểm tra lại.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', color: '#333' }}>Xác Nhận Đơn Hàng & Thanh Toán</h2>
+      
+      <form onSubmit={handleOrderSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+        <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e1e1e1' }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>1. Thông tin người nhận</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <input 
+              type="text" 
+              name="fullName" 
+              placeholder="Họ và tên người nhận" 
+              value={formData.fullName} 
+              onChange={handleChange} 
+              required 
+              style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
+            />
+            <input 
+              type="text" 
+              name="phone" 
+              placeholder="Số điện thoại liên hệ" 
+              value={formData.phone} 
+              onChange={handleChange} 
+              required 
+              style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
+            />
+            <textarea 
+              name="address" 
+              placeholder="Địa chỉ nhận hàng chi tiết" 
+              value={formData.address} 
+              onChange={handleChange} 
+              required 
+              rows="3"
+              style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc', resize: 'vertical' }} 
+            />
+            
+            <label style={{ fontWeight: 'bold', marginTop: '5px' }}>Chọn cơ sở nhận hàng:</label>
+            <select 
+              name="local" 
+              value={formData.local} 
+              onChange={handleChange} 
+              style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            >
+              <option value="Cơ sở 1">Cơ sở 1</option>
+              <option value="Cơ sở 2">Cơ sở 2</option>
+              <option value="Cơ sở 3">Cơ sở 3</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e1e1e1' }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>2. Phương thức thanh toán</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <label style={{ cursor: 'pointer' }}><input type="radio" name="paymentMethod" value="COD" checked={formData.paymentMethod === 'COD'} onChange={handleChange} /> Thanh toán khi nhận hàng (COD)</label>
+            <label style={{ cursor: 'pointer' }}><input type="radio" name="paymentMethod" value="Banking" checked={formData.paymentMethod === 'Banking'} onChange={handleChange} /> Chuyển khoản ngân hàng trực tuyến</label>
+            <label style={{ cursor: 'pointer' }}><input type="radio" name="paymentMethod" value="MoMo" checked={formData.paymentMethod === 'MoMo'} onChange={handleChange} /> Ví điện tử MoMo</label>
+          </div>
+        </div>
+
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>3. Tóm tắt sản phẩm đặt mua</h3>
+          {items.map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px dashed #eee' }}>
+              <span>{item.name} (SL: <strong>{item.quantity}</strong>) - [{item.local}]</span>
+              <span style={{ fontWeight: 'bold' }}>{(item.price * item.quantity).toLocaleString()} VNĐ</span>
+            </div>
+          ))}
+          <div style={{ textAlign: 'right', marginTop: '15px' }}>
+            <h3 style={{ margin: 0 }}>Tổng cộng: <span style={{ color: '#e74c3c' }}>{totalPrice.toLocaleString()} VNĐ</span></h3>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          disabled={submitting}
+          style={{ padding: '14px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
+        >
+          {submitting ? 'Đang xử lý đơn hàng...' : 'Xác Nhận Đặt Hàng'}
+        </button>
+      </form>
+    </div>
+  );
+}
