@@ -3,7 +3,7 @@ const axios = require("axios");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 const UserInfo = require("../middleware/userInfo");
-const User = require("../models/User"); // Đảm bảo đã require model User nếu chưa có
+const User = require("../models/User");
 
 exports.login = async (req, res) => {
   try {
@@ -44,11 +44,12 @@ exports.login = async (req, res) => {
 
     // 1. Lấy hoặc tạo mới user từ hệ thống VLU
     const user = await UserInfo(client, mssv, password);
-    // 2. QUAN TRỌNG: Populate thông tin profile để lấy avatar gửi về cho Frontend
-    const populatedUser = await User.findById(user._id).populate('profile');
+
+    // 2. Populate thông tin profile để lấy avatar gửi về cho Frontend
+    const populatedUser = await User.findById(user.id).populate('profile');
 
     const token = jwt.sign(
-      { id: user._id, mssv: mssv, role: user.role }, 
+      { id: user.id, mssv: mssv, role: user.role }, 
       process.env.JWT_SECRET || "VLU_SECRET_KEY", 
       { expiresIn: "1d" },
     );
@@ -60,11 +61,12 @@ exports.login = async (req, res) => {
       sameSite: "lax", // Hoặc 'strict' tùy theo cấu hình CORS của bạn
       maxAge: 24 * 60 * 60 * 1000, // 1 ngày (tính bằng milliseconds)
     });
-    // 3. Trả về cả token VÀ object user (đã có profile chứa avatar)
+
+    // 4. Trả về response (đã lược bỏ token trong json body vì đã lưu vào cookie)
     return res.status(200).json({
       success: true,
       user: {
-        id: populatedUser._id,
+        id: populatedUser.id,
         mssv: populatedUser.mssv,
         email: populatedUser.email,
         role: populatedUser.role,

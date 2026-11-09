@@ -14,17 +14,19 @@ const UserMenu = () => {
   // Lấy thông tin user từ localStorage hoặc sessionStorage khi component mount
   useEffect(() => {
     try {
-      // Ưu tiên lấy từ localStorage, nếu không có sẽ kiểm tra ở sessionStorage
-      const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+      const storedUser = sessionStorage.getItem('user');
 
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         
-        // Hỗ trợ linh hoạt các tên property khác nhau của object user
+        // Lấy ID linh hoạt dựa trên cấu trúc dữ liệu trả về từ backend
+        const userId = parsedUser._id || parsedUser.id || parsedUser.profile?.id || parsedUser.profile?._id;
+
         setUserInfo({
-          name: parsedUser.profile.name || 'Người dùng',
+          id: userId || '',
+          name: parsedUser.profile?.name || parsedUser.name || 'Người dùng',
           email: parsedUser.email || '',
-          avatar: parsedUser.profile.avatar || ''
+          avatar: parsedUser.profile?.avatar || parsedUser.avatar || ''
         });
       }
     } catch (error) {
@@ -32,24 +34,20 @@ const UserMenu = () => {
       setUserInfo({
         name: 'Người dùng',
         email: '',
-        avatar: ''
+        avatar: '',
+        id: ''
       });
     }
   }, []);
 
   const logOut = async () => {
     try {
-      // 1. Gọi API logout phía Backend để xóa Cookie (nếu có sử dụng cookie-parser)
-      
       await axios.post('/api/auth/logout', {}, {});
     } catch (error) {
       console.error('Lỗi khi gọi API logout:', error);
     } finally {
-      // 2. Xóa sạch thông tin lưu trữ ở trình duyệt dù gọi API thành công hay thất bại
       localStorage.removeItem('user');
       sessionStorage.removeItem('user');
-
-      // 3. Chuyển hướng về trang đăng nhập
       navigate('/login', { replace: true });
     }
   };
@@ -57,12 +55,9 @@ const UserMenu = () => {
   return (
     <div className="user-dropdown">
       <div className="user-dropdown-header">
-        {/* Hiển thị tên (có hỗ trợ chống tràn chữ) */}
         <p className="user-name" title={userInfo.name}>
           {userInfo.name}
         </p>
-        
-        {/* Hiển thị email (tự động cắt thành ... khi quá dài) */}
         <p className="user-email" title={userInfo.email}>
           {userInfo.email}
         </p>
@@ -71,12 +66,22 @@ const UserMenu = () => {
       <hr className="dropdown-divider" />
 
       <ul className="user-dropdown-list">
-        <li className="user-dropdown-item" onClick={() => userInfo.id && navigate(`/user/${userInfo.id}`)}>
+        {/* Đã sửa lại để lấy đúng ID và chuyển hướng chính xác đến trang UserDetail */}
+        <li 
+          className="user-dropdown-item" 
+          onClick={() => {
+            if (userInfo.id) {
+              navigate(`/user/${userInfo.id}`);
+            } else {
+              console.warn("Không tìm thấy ID người dùng!");
+            }
+          }}
+        >
           Hồ sơ cá nhân
         </li>
-        <li className="user-dropdown-item" onClick={() => navigate('/settingProfile')}>
-          Chỉnh sửa hồ sơ
-        </li>
+        
+        {/* Đã loại bỏ mục "Chỉnh sửa hồ sơ" theo yêu cầu */}
+
         <li className="user-dropdown-item text-danger" onClick={logOut}>
           Đăng xuất
         </li>

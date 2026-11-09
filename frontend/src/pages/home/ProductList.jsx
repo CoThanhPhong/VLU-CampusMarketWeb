@@ -12,14 +12,26 @@ export default function ProductList() {
   const [selectedLocal, setSelectedLocal] = useState('all');
 
   useEffect(() => {
-    axios.get('/api/products/g')
-      .then((res) => {
-        if (res.data.success) {
-          setProducts(res.data.data || []);
-        }
-      })
-      .catch((err) => console.error('Lỗi API:', err))
-      .finally(() => setLoading(false));
+    // KIỂM TRA BỘ NHỚ TẠM (CACHE) THEO YÊU CẦU CỦA LEADER
+    const cachedData = sessionStorage.getItem('productsCache');
+    
+    if (cachedData) {
+      // Nếu đã có dữ liệu trong cache, sử dụng ngay lập tức không cần fetch API
+      setProducts(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      // Nếu chưa có, gọi API lấy dữ liệu
+      axios.get('/api/products/g')
+        .then((res) => {
+          if (res.data.success) {
+            setProducts(res.data.data || []);
+            // LƯU KẾT QUẢ VÀO CACHE ĐỂ DÙNG CHO CÁC LẦN TẢI SAU
+            sessionStorage.setItem('productsCache', JSON.stringify(res.data.data || []));
+          }
+        })
+        .catch((err) => console.error('Lỗi API:', err))
+        .finally(() => setLoading(false));
+    }
   }, []);
 
   const filteredProducts = useMemo(() => {

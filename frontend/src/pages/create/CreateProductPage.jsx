@@ -14,7 +14,8 @@ export default function CreateProductPage() {
     local: 'Cơ sở 1',
     img: '',
     status: 'Còn hàng', // Chỉ được dùng 'Còn hàng' hoặc 'Hết hàng'
-    deviceType: 'mobile'
+    deviceType: 'mobile',
+    author: '', // Bắt buộc theo Schema, sẽ được Backend tự động gán từ user hiện tại
   });
 
   const handleChange = (e) => {
