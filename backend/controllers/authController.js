@@ -44,14 +44,9 @@ exports.login = async (req, res) => {
 
     // 1. Lấy hoặc tạo mới user từ hệ thống VLU
     const user = await UserInfo(client, mssv, password);
-<<<<<<< HEAD
-    // 2. QUAN TRỌNG: Populate thông tin profile để lấy avatar gửi về cho Frontend
-    const populatedUser = await User.findById(user._id).populate('profile');
-=======
 
     // 2. Populate thông tin profile để lấy avatar gửi về cho Frontend
     const populatedUser = await User.findById(user.id).populate('profile');
->>>>>>> feature/update-ui-sam
 
     const token = jwt.sign(
       { id: user.id, mssv: mssv, role: user.role }, 
@@ -66,20 +61,12 @@ exports.login = async (req, res) => {
       sameSite: "lax", // Hoặc 'strict' tùy theo cấu hình CORS của bạn
       maxAge: 24 * 60 * 60 * 1000, // 1 ngày (tính bằng milliseconds)
     });
-<<<<<<< HEAD
-    // 3. Trả về cả token VÀ object user (đã có profile chứa avatar)
-    return res.status(200).json({
-      success: true,
-      user: {
-        id: populatedUser._id,
-=======
 
     // 4. Trả về response (đã lược bỏ token trong json body vì đã lưu vào cookie)
     return res.status(200).json({
       success: true,
       user: {
         id: populatedUser.id,
->>>>>>> feature/update-ui-sam
         mssv: populatedUser.mssv,
         email: populatedUser.email,
         role: populatedUser.role,

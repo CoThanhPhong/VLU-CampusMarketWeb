@@ -32,7 +32,7 @@ export default function ProductCard({ product }) {
   // Hàm xử lý nút Mua hàng
   const handleBuyNow = (e) => { 
     e.stopPropagation(); 
-    alert(`Đã tiến hành thanh toán ${qty} sản phẩm.`); 
+    alert(`Đã tiến hành thanh toán ${qty} sản phẩm.`);
   };
   
   const handleAddToCart = (e) => { 
