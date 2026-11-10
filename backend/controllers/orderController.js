@@ -134,3 +134,69 @@ exports.cancelOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.confirmOrderPayment = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Thiếu mã đơn hàng (orderId)' });
+    }
+
+    const foundOrder = await Order.findById(orderId);
+
+    if (!foundOrder) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+    }
+
+    // Cập nhật trạng thái thanh toán và đơn hàng
+    foundOrder.isPaid = true;
+    foundOrder.paidAt = Date.now();
+    foundOrder.orderStatus = 'Đã thanh toán'; // Hoặc 'Đã xác nhận' tùy luồng của bạn
+
+    const updatedOrder = await foundOrder.save();
+
+    // Xóa cache session nếu có để dữ liệu đồng bộ
+    if (req.session && req.session.myOrders) {
+      delete req.session.myOrders;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Xác nhận thanh toán thành công!',
+      data: updatedOrder
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+// 5. Lấy danh sách đơn hàng dành cho Người bán (Dựa vào sản phẩm có author trùng với user hiện tại)
+exports.getSellerOrders = async (req, res) => {
+  try {
+    const sellerId = req.user.id; // Lấy ID của người bán đang đăng nhập từ middleware xác thực
+
+    // 1. Tìm tất cả đơn hàng và populate thông tin sản phẩm (bao gồm trường author của sản phẩm)
+    const allOrders = await Order.find()
+      .populate({
+        path: 'orderItems.product',
+        select: 'name img price author',
+      })
+      .sort({ createdAt: -1 });
+
+    // 2. Lọc chỉ lấy các đơn hàng có chứa ít nhất một sản phẩm do người bán này đăng (author === sellerId)
+    const sellerOrders = allOrders.filter(order => {
+      return order.orderItems.some(item => {
+        const productAuthor = item.product?.author?._id || item.product?.author;
+        return productAuthor && productAuthor.toString() === sellerId.toString();
+      });
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: sellerOrders
+    });
+  } catch (error) {
+    console.error("Lỗi lấy đơn hàng người bán:", error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

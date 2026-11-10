@@ -1,0 +1,102 @@
+.sidebar {
+  width: 240px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: width 0.3s ease-in-out;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Khi thu gọn, giữ lại độ rộng 70px để hiển thị icon */
+.sidebar.closed {
+  width: 70px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Ẩn chữ và badge dòng khi thu gọn */
+.sidebar.closed .nav-text,
+.sidebar.closed .sidebar-badge-inline {
+  display: none !important;
+}
+
+/* Ẩn badge đỏ ở góc khi mở rộng */
+.sidebar.open .sidebar-badge {
+  display: none !important;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  width: 100%;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.nav-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.nav-item.active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+/* Khung bọc icon cố định tuyệt đối */
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.nav-icon-wrapper svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Badge số lượng đơn chờ khi thu gọn */
+.sidebar-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background-color: #dc2626;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  border: 1px solid #ffffff;
+}
+
+/* Badge số lượng đơn chờ khi mở rộng */
+.sidebar-badge-inline {
+  margin-left: auto;
+  background-color: #dc2626;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}

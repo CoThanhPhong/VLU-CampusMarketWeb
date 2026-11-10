@@ -16,6 +16,7 @@ import CheckoutPage from "./components/checkout/checkoutPage";
 import ProductList from "./pages/home/ProductList"; 
 import CreateProductPage from "./pages/create/CreateProductPage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+import SellerPage from "./pages/order/SellerPage";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
             <Route path="/product/:id" element={<PostDetail />} />
             <Route path="/user/:id" element={<UserDetail />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/seller" element={<SellerPage/>} />
           </Route>
         </Route>
 
