@@ -108,7 +108,7 @@ export default function ProductList() {
             value={searchTerm}
             onChange={handleSearchChange}
             style={{
-              width: '100%', padding: '9px 12px 9px 36px', borderRadius: '6px',
+              width: '100%', padding: '9px', borderRadius: '6px',
               border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', boxSizing: 'border-box'
             }}
           />

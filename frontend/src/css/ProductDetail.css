@@ -2,7 +2,7 @@
 /* ==========================================================================
    DETAIL PAGE & SHARED STYLES
    ========================================================================== */
-.detail-page { width: min(1180px, 100%); margin: 0 auto; color: #172033; padding: 20px 16px; }
+.detail-page { width: min(1180px, 100%); margin: 0 auto; color: #172033;}
 .back-link { display: inline-flex; align-items: center; gap: 8px; border: 0; background: transparent; color: #64748b; font-size: 14px; font-weight: 600; cursor: pointer; margin: 2px 0 18px; padding: 7px 0; }
 .back-link:hover { color: #2563eb; }
 
