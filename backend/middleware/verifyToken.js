@@ -1,19 +1,18 @@
 const jwt = require('jsonwebtoken');
 
-// 1. Middleware xác thực Token
+// 1. Middleware xác thực Token hoàn toàn lấy từ Cookie
 const verifyToken = (req, res, next) => {
-  // Lấy header Authorization từ request client gửi lên
-  const authHeader = req.headers.authorization;
+  // Lấy token trực tiếp từ req.cookies (yêu cầu server đã dùng cookie-parser)
+  const token = req.cookies?.token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token) {
+    console.log('Cookies:', req.cookies);
+    console.log('Token from cookie or header:', token);
     return res.status(401).json({ 
       success: false, 
-      message: 'Không tìm thấy Token xác thực, vui lòng đăng nhập lại!' 
+      message: 'Không tìm thấy Token trong Cookie, vui lòng đăng nhập lại!' 
     });
   }
-
-  // Cắt lấy phần token phía sau chữ "Bearer "
-  const token = authHeader.split(' ')[1];
 
   try {
     // Giải mã token bằng secret key
@@ -31,9 +30,8 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// 2. Middleware kiểm tra quyền Admin (ĐÃ TÁCH RA NGOÀI HOÀN TOÀN)
+// 2. Middleware kiểm tra quyền Admin
 const isAdmin = (req, res, next) => {
-  console.log('Thông tin user từ token:', req.user.role); // Debug thông tin user từ token
   if (req.user && req.user.role === 'admin') {
     next(); // Cho phép đi tiếp
   } else {

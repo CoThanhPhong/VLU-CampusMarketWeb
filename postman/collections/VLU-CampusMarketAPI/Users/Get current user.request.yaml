@@ -2,7 +2,5 @@ $kind: http-request
 url: http://localhost:5000/api/auth/profile
 method: GET
 auth:
-  type: bearer
-  credentials:
-    token: "{{token}}"
+  type: noauth
 order: 2275129809700300

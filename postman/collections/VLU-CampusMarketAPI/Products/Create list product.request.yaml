@@ -5,80 +5,1409 @@ body:
   type: json
   content: "[\r
 
-    \    {\r
+    \  {\r
 
-    \        \"name\": \"Iphone 15 Pro\",\r
+    \    \"name\": \"iPhone 14 Pro Max - 128GB\",\r
 
-    \        \"description\": \"Còn mới 99%\",\r
+    \    \"description\": \"Máy chính hãng, ngoại hình đẹp 98%, pin 85%\",\r
 
-    \        \"price\": 1500000,\r
+    \    \"price\": 18500000,\r
 
-    \        \"amount\": 1,\r
+    \    \"amount\": 2,\r
 
-    \        \"local\": \"Cơ sở 1\",\r
+    \    \"local\": \"Cơ sở 1\",\r
 
-    \        \"img\":
-    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
 
-    \        \"status\": \"Còn hàng\",\r
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
 
-    \        \"deviceType\": \"mobile\",\r
+    \    \"status\": \"Còn hàng\",\r
 
-    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+    \    \"deviceType\": \"mobile\",\r
 
-    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
 
-    \    },\r
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
 
-    \    {\r
+    \  },\r
 
-    \        \"name\": \"Iphone 8 Pro\",\r
+    \  {\r
 
-    \        \"description\": \"Còn mới 99%\",\r
+    \    \"name\": \"Samsung Galaxy S22 Ultra\",\r
 
-    \        \"price\": 3500000,\r
+    \    \"description\": \"Bản Hàn, 2 sim, màn không ám ố\",\r
 
-    \        \"amount\": 2,\r
+    \    \"price\": 12500000,\r
 
-    \        \"local\": \"Cơ sở 2\",\r
+    \    \"amount\": 1,\r
 
-    \        \"img\":
-    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+    \    \"local\": \"Cơ sở 2\",\r
 
-    \        \"status\": \"Còn hàng\",\r
+    \    \"img\": \"https://placehold.co/600x400\",\r
 
-    \        \"deviceType\": \"mobile\",\r
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
 
-    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+    \    \"status\": \"Còn hàng\",\r
 
-    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+    \    \"deviceType\": \"mobile\",\r
 
-    \    },\r
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
 
-    \    {\r
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
 
-    \        \"name\": \"Iphone 12 Pro\",\r
+    \  },\r
 
-    \        \"description\": \"Còn mới 99%\",\r
+    \  {\r
 
-    \        \"price\": 5500000,\r
+    \    \"name\": \"MacBook Air M1 2020\",\r
 
-    \        \"amount\": 1,\r
+    \    \"description\": \"Màu Silver, sạc ít lần, pin 95%\",\r
 
-    \        \"local\": \"Cơ sở 3\",\r
+    \    \"price\": 17800000,\r
 
-    \        \"img\":
-    \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+    \    \"amount\": 3,\r
 
-    \        \"status\": \"Còn hàng\",\r
+    \    \"local\": \"Cơ sở 3\",\r
 
-    \        \"deviceType\": \"mobile\",\r
+    \    \"img\": \"https://placehold.co/600x400\",\r
 
-    \        \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
 
-    \        \"endDate\": \"2026-06-04T18:00:00.000Z\"\r
+    \    \"status\": \"Còn hàng\",\r
 
-    \    }\r
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Gen 9 Wifi 64GB\",\r
+
+    \    \"description\": \"Mới active vài tháng, như mới nguyên hộp\",\r
+
+    \    \"price\": 6200000,\r
+
+    \    \"amount\": 4,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Dell Inspiron 3511 i5\",\r
+
+    \    \"description\": \"Laptop văn phòng mượt mà, chạy tốt đồ họa cơ bản\",\r
+
+    \    \"price\": 9500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 13 - 128GB\",\r
+
+    \    \"description\": \"Máy nguyên zin, áp suất đầy đủ\",\r
+
+    \    \"price\": 11200000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 14 M1 Pro\",\r
+
+    \    \"description\": \"Ram 16GB, SSD 512GB, cấu hình mạnh mẽ cho coder\",\r
+
+    \    \"price\": 28500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Air 4 Wifi 64GB\",\r
+
+    \    \"description\": \"Màu xanh, ngoại hình đẹp không cấn móp\",\r
+
+    \    \"price\": 8900000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Asus Vivobook 15 OLED\",\r
+
+    \    \"description\": \"Màn hình OLED sắc nét, ryzen 5, ram 8gb\",\r
+
+    \    \"price\": 10500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 11 - 64GB\",\r
+
+    \    \"description\": \"Màu tím mộng mơ, face id nhạy\",\r
+
+    \    \"price\": 5500000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Xiaomi Pad 5\",\r
+
+    \    \"description\": \"Màn hình 120Hz mượt mà xem phim cực thích\",\r
+
+    \    \"price\": 4800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Lenovo ThinkPad E14 Gen 2\",\r
+
+    \    \"description\": \"Bàn phím gõ êm, máy trâu bò bền bỉ\",\r
+
+    \    \"price\": 8800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Air M2 2022\",\r
+
+    \    \"description\": \"Thiết kế mới vuông vức, siêu mỏng nhẹ\",\r
+
+    \    \"price\": 23000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy Tab S8\",\r
+
+    \    \"description\": \"Kèm bút S-Pen tiện lợi vẽ vời ghi chép\",\r
+
+    \    \"price\": 9200000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 12 Pro Max\",\r
+
+    \    \"description\": \"Bản quốc tế 256GB, ngoại hình 97%\",\r
+
+    \    \"price\": 13800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"HP Pavilion 14 ec1056AU\",\r
+
+    \    \"description\": \"AMD Ryzen 5 5625U, ram 16GB\",\r
+
+    \    \"price\": 9900000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Pro 11 inch M1\",\r
+
+    \    \"description\": \"Màn hình 120Hz Promotion cực mượt\",\r
+
+    \    \"price\": 14500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 13 M2 2022\",\r
+
+    \    \"description\": \"Thanh Touchbar huyền thoại, pin hoàn hảo\",\r
+
+    \    \"price\": 21500000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Google Pixel 6 Pro\",\r
+
+    \    \"description\": \"Camera chụp ảnh nghệ thuật đỉnh cao\",\r
+
+    \    \"price\": 6800000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Acer Aspire 7 Gaming\",\r
+
+    \    \"description\": \"Có card đồ họa rời GTX 1650 chiến game tốt\",\r
+
+    \    \"price\": 8500000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 15 - 128GB\",\r
+
+    \    \"description\": \"Dynamic Island thời thượng, cổng Type-C\",\r
+
+    \    \"price\": 19500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Mini 6\",\r
+
+    \    \"description\": \"Nhỏ gọn tiện lợi, cầm đọc sách chơi game tuyệt vời\",\r
+
+    \    \"price\": 9800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 16 M1 Max\",\r
+
+    \    \"description\": \"Hàng khủng chuyên đồ họa 3D, dựng phim 4K\",\r
+
+    \    \"price\": 38000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy S23\",\r
+
+    \    \"description\": \"Nhỏ gọn, chip Snapdragon 8 Gen 2 mạnh mẽ\",\r
+
+    \    \"price\": 13200000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Dell XPS 13 9310\",\r
+
+    \    \"description\": \"Màn hình tràn viền 4K cảm ứng cực đẹp\",\r
+
+    \    \"price\": 19800000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Xiaomi 13 Pro\",\r
+
+    \    \"description\": \"Camera Leica chụp cực nét, sạc siêu nhanh 120W\",\r
+
+    \    \"price\": 14500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Gen 10\",\r
+
+    \    \"description\": \"Thiết kế mới trẻ trung nhiều màu sắc lựa chọn\",\r
+
+    \    \"price\": 7900000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Air 2017\",\r
+
+    \    \"description\": \"Hàng hoài niệm cho học sinh sinh viên làm word excel\",\r
+
+    \    \"price\": 4500000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Oppo Reno 8 Z\",\r
+
+    \    \"description\": \"Thiết kế mỏng nhẹ, selfie lung linh\",\r
+
+    \    \"price\": 4200000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Lenovo Legion 5\",\r
+
+    \    \"description\": \"Laptop gaming tản nhiệt cực tốt, chơi game mượt\",\r
+
+    \    \"price\": 16500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 8 Plus\",\r
+
+    \    \"description\": \"Huyền thoại nút home, chống cháy hoàn hảo\",\r
+
+    \    \"price\": 2600000,\r
+
+    \    \"amount\": 4,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Pro 12.9 inch M2\",\r
+
+    \    \"description\": \"Màn hình mini-LED siêu lớn hiển thị rực rỡ\",\r
+
+    \    \"price\": 21000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 15 2019\",\r
+
+    \    \"description\": \"Core i7, ram 16GB, màn hình Retina lớn\",\r
+
+    \    \"price\": 11500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy Note 20 Ultra\",\r
+
+    \    \"description\": \"Dòng Note huyền thoại kèm bút S-Pen quyền lực\",\r
+
+    \    \"price\": 7900000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MSI Modern 14\",\r
+
+    \    \"description\": \"Gọn nhẹ năng động cho học sinh sinh viên\",\r
+
+    \    \"price\": 7800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone XS\",\r
+
+    \    \"description\": \"Máy nhỏ gọn, mượt mà hệ điều hành iOS\",\r
+
+    \    \"price\": 3400000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy Tab A8\",\r
+
+    \    \"description\": \"Giá rẻ học online xem Youtube giải trí tốt\",\r
+
+    \    \"price\": 2900000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Air M3 2024\",\r
+
+    \    \"description\": \"Chip M3 siêu mạnh mẽ, thiết kế mới nhất\",\r
+
+    \    \"price\": 27500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 12\",\r
+
+    \    \"description\": \"Bản 64GB xanh biển, máy nguyên zin\",\r
+
+    \    \"price\": 7600000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"HP Envy 13\",\r
+
+    \    \"description\": \"Vỏ nhôm nguyên khối sang trọng như Mac\",\r
+
+    \    \"price\": 12500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Gen 8\",\r
+
+    \    \"description\": \"Bền bỉ, chống chịu va đập tốt cho học sinh\",\r
+
+    \    \"price\": 4900000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone X\",\r
+
+    \    \"description\": \"Khai phá màn hình tai thỏ, Face ID nhạy\",\r
+
+    \    \"price\": 3100000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 14 M3\",\r
+
+    \    \"description\": \"Màu Space Black cực ngầu, chip đời mới\",\r
+
+    \    \"price\": 32000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy Z Flip 4\",\r
+
+    \    \"description\": \"Điện thoại gập thời trang, nhỏ gọn bỏ túi\",\r
+
+    \    \"price\": 8500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Asus TUF Gaming F15\",\r
+
+    \    \"description\": \"Hầm hố, card RTX 3050 chiến mọi tựa game nặng\",\r
+
+    \    \"price\": 14200000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Air 5 M1\",\r
+
+    \    \"description\": \"Hiệu năng cực mạnh mẽ với Apple Silicon M1\",\r
+
+    \    \"price\": 11800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 14 Pro\",\r
+
+    \    \"description\": \"Màu tím đậm sang trọng, máy đẹp keng\",\r
+
+    \    \"price\": 16800000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Air 2020 Intel\",\r
+
+    \    \"description\": \"Chạy hệ điều hành MacOS ổn định giá rẻ\",\r
+
+    \    \"price\": 12000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy S21 Ultra\",\r
+
+    \    \"description\": \"Camera zoom 100x đỉnh cao, màn hình lớn 120Hz\",\r
+
+    \    \"price\": 8200000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Lenovo IdeaPad Slim 3\",\r
+
+    \    \"description\": \"Gọn nhẹ, pin tốt, phù hợp học tập văn phòng\",\r
+
+    \    \"price\": 6900000,\r
+
+    \    \"amount\": 3,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"laptop\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPad Pro 11 inch 2020\",\r
+
+    \    \"description\": \"Trang bị cụm camera kép và cảm biến LIDAR\",\r
+
+    \    \"price\": 10500000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-air-m3-11-inch_3__6.jpg\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"tablet\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"iPhone 13 Pro\",\r
+
+    \    \"description\": \"Màn hình 120Hz ProMotion siêu mượt\",\r
+
+    \    \"price\": 14200000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 1\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"MacBook Pro 16 2019\",\r
+
+    \    \"description\": \"Bàn phím cơ chế mới gõ êm, màn hình cực lớn\",\r
+
+    \    \"price\": 14000000,\r
+
+    \    \"amount\": 1,\r
+
+    \    \"local\": \"Cơ sở 2\",\r
+
+    \    \"img\": \"https://placehold.co/600x400\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mac\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  },\r
+
+    \  {\r
+
+    \    \"name\": \"Samsung Galaxy A54 5G\",\r
+
+    \    \"description\": \"Chính hãng nguyên seal, thiết kế trẻ trung\",\r
+
+    \    \"price\": 5800000,\r
+
+    \    \"amount\": 2,\r
+
+    \    \"local\": \"Cơ sở 3\",\r
+
+    \    \"img\": \"https://images.unsplash.com/photo-1559592413-7cec4d0cae2b\",\r
+
+    \    \"startDate\": \"2026-06-01T08:00:00.000Z\",\r
+
+    \    \"status\": \"Còn hàng\",\r
+
+    \    \"deviceType\": \"mobile\",\r
+
+    \    \"endDate\": \"2026-06-10T18:00:00.000Z\",\r
+
+    \    \"author\": \"6aec979a36414ea5e5c46512\"\r
+
+    \  }\r
 
     ]"
 order: 3818891593906354

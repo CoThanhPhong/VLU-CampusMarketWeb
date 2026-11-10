@@ -16,31 +16,31 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Gọi API đăng nhập tới Backend (giả sử port backend là 5000 hoặc dùng Vite Proxy)
+      // Gọi API đăng nhập tới Backend
       const response = await fetch('api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ mssv, password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      // Kiểm tra response.ok hoặc data.success từ backend
+      if (!response.ok || data.success === false) {
         throw new Error(data.message || 'Đăng nhập thất bại');
       }
 
-      // Lưu token vào localStorage (hoặc sessionStorage nếu "Ghi nhớ đăng nhập" không được chọn)
       if (rememberMe) {
-        localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
       } else {
-        sessionStorage.setItem('token', data.token);
         sessionStorage.setItem('user', JSON.stringify(data.user));
       }
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công
+      sessionStorage.setItem('user', JSON.stringify(data.user));
       navigate('/home');
     } catch (err) {
       setError(err.message);
@@ -54,7 +54,7 @@ const Login = () => {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <img src="https://online.vlu.edu.vn/Content/logo/logosona.jpg"/>
+          <img src="https://online.vlu.edu.vn/Content/logo/logosona.jpg" alt="VLU Logo" />
         </div>
 
         {/* Tiêu đề */}
