@@ -4,7 +4,6 @@ import HomePage from "./pages/home/HomePage";
 import Login from "./pages/login/Login";
 import PublicRoute from "./components/Route/PublicRoute";
 import ProtectedRoute from "./components/Route/ProtectedRoute";
-import Settings from "./pages/settings/setting";
 import SettingProfile from "./pages/settings/profile";
 import PostDetail from "./pages/postDetail/PostDetail";
 import UserDetail from "./pages/userDetail/UserDetail";
@@ -41,7 +40,6 @@ function App() {
             <Route path="/orders" element={<OrderListPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/settings" element={<Settings />} />
             <Route path="/settingProfile" element={<SettingProfile />} />
             <Route path="/product/:id" element={<PostDetail />} />
             <Route path="/user/:id" element={<UserDetail />} />

@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, CalendarDays, Package, UserRound, ShoppingCart, Imag
 import { getProductDetail, getProductOwnerId, normalizeUser } from "../../services/detailApi";
 import axios from "axios";
 import "../../css/ProductDetail.css";
+import "../../css/CustomModal.css";
 
 const money = (value) => Number(value || 0).toLocaleString("vi-VN") + " đ";
 const dateText = (value) => value ? new Date(value).toLocaleDateString("vi-VN") : "Chưa cập nhật";
@@ -26,31 +27,36 @@ export default function PostDetail() {
     mac: 'Macbook' 
   };
 
+  // SỬA TRIỆT ĐỂ: Luôn gọi API chuẩn theo ID trên URL, bỏ qua cache cũ gây lệch dữ liệu
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    
-    const cached = sessionStorage.getItem('productsCache');
-    if (cached) {
-      try {
-        const foundProduct = JSON.parse(cached).find(p => p._id === id);
-        if (foundProduct) {
-          setProduct(foundProduct);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {
-        console.error("Lỗi đọc cache:", e);
-      }
-    }
+    setError("");
+    setProduct(null); // Reset product cũ khi đổi sang id mới
 
     getProductDetail(id)
-      .then((data) => { if (alive) setProduct(data); })
-      .catch((err) => { if (alive) setError(err.message); })
-      .finally(() => { if (alive) setLoading(false); });
+      .then((data) => {
+        if (alive) {
+          if (data) {
+            setProduct(data);
+          } else {
+            setError("Không tìm thấy thông tin sản phẩm.");
+          }
+        }
+      })
+      .catch((err) => {
+        if (alive) {
+          setError(err.message || 'Không thể tải chi tiết sản phẩm');
+        }
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
 
-    return () => { alive = false; };
-  }, [id]);
+    return () => { 
+      alive = false; 
+    };
+  }, [id]); // Lắng nghe sự thay đổi của id trên URL để fetch đúng dữ liệu
 
   useEffect(() => {
     let alive = true;
@@ -131,57 +137,98 @@ export default function PostDetail() {
     setActiveImageIndex(prev => (prev === imageList.length - 1 ? 0 : prev + 1));
   };
 
+  const handleAddToCart = async () => {
+    if (!available) return;
+    try {
+      let currentCart = [];
+      const savedCart = sessionStorage.getItem('cartItems');
+      if (savedCart) currentCart = JSON.parse(savedCart);
+
+      const existingIndex = currentCart.findIndex(item => (item.product || item._id) === product._id);
+      if (existingIndex > -1) {
+        const newQuantity = currentCart[existingIndex].quantity + qty;
+        currentCart[existingIndex].quantity = newQuantity <= product.amount ? newQuantity : product.amount;
+      } else {
+        currentCart.push({
+          _id: product._id,
+          product: product._id,
+          name: product.name,
+          price: product.price,
+          img: imageList[0] || '',
+          amount: product.amount,
+          local: product.local || 'Cơ sở 1',
+          quantity: qty
+        });
+      }
+
+      const response = await axios.post('/api/cart/u', { items: currentCart }, { withCredentials: true });
+      if (response.data.success) {
+        sessionStorage.setItem('cartItems', JSON.stringify(response.data.data));
+        window.dispatchEvent(new Event('cartUpdated'));
+        alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng!`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể thêm vào giỏ hàng');
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!available) return;
+    const buyNowItem = [{
+      _id: product._id,
+      product: product._id,
+      name: product.name,
+      price: product.price,
+      img: imageList[0] || '',
+      amount: product.amount,
+      local: product.local || 'Cơ sở 1',
+      quantity: qty
+    }];
+    sessionStorage.setItem('checkoutItems', JSON.stringify(buyNowItem));
+    navigate('/checkout');
+  };
+
   return (
     <section className="detail-page">
-      <button className="back-link" onClick={() => navigate(-1)}><ArrowLeft size={17}/> Quay lại</button>
+      <button className="back-link" onClick={() => navigate(-1)}><ArrowLeft size={16}/> Quay lại</button>
+      
       <div className="post-detail-grid">
         
-        {/* CỘT TRÁI: HÌNH ẢNH SẢN PHẨM & THUMBNAIL */}
-        <div className="post-image-panel" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          
-          <div style={{ position: 'relative', width: '100%' }}>
-            <span style={{ 
-              position: 'absolute', top: '12px', left: '12px', zIndex: 5,
-              backgroundColor: '#334155', color: '#ffffff', 
-              fontSize: '12px', fontWeight: '600', padding: '5px 10px', borderRadius: '6px' 
-            }}>
-              {deviceLabels[product?.deviceType] || product?.deviceType || 'Sản phẩm'}
-            </span>
-
-            {imageList.length > 0 && imageList[activeImageIndex] ? (
-              <div style={{ position: 'relative' }}>
-                <img 
-                  className="post-main-image" 
-                  src={imageList[activeImageIndex]} 
-                  alt={product.name} 
-                  onError={(e) => { e.currentTarget.style.display = "none"; }} 
-                />
-                {imageList.length > 1 && (
-                  <>
-                    <button onClick={handlePrevImage} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ChevronLeft size={20} />
-                    </button>
-                    <button onClick={handleNextImage} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ChevronRight size={20} />
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="image-placeholder"><ImageOff size={42}/><span>Chưa có hình ảnh</span></div>
-            )}
-          </div>
+        {/* CỘT TRÁI: ẢNH CHÍNH & THUMBNAILS */}
+        <div className="post-image-panel">
+          {imageList.length > 0 && imageList[activeImageIndex] ? (
+            <div style={{ position: 'relative' }}>
+              <img 
+                className="post-main-image" 
+                src={imageList[activeImageIndex]} 
+                alt={product.name} 
+                onError={(e) => { e.currentTarget.style.display = "none"; }} 
+              />
+              {imageList.length > 1 && (
+                <>
+                  <button onClick={handlePrevImage} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button onClick={handleNextImage} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="image-placeholder"><ImageOff size={42}/><span>Chưa có hình ảnh</span></div>
+          )}
 
           {imageList.length > 1 && (
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginTop: '12px', paddingBottom: '4px' }}>
               {imageList.map((imgUrl, idx) => (
                 <div 
                   key={idx} 
                   onClick={() => setActiveImageIndex(idx)}
                   style={{ 
-                    width: '64px', height: '64px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
-                    border: activeImageIndex === idx ? '2px solid #2563eb' : '1px solid #cbd5e1',
-                    opacity: activeImageIndex === idx ? 1 : 0.75,
+                    width: '70px', height: '70px', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
+                    border: activeImageIndex === idx ? '2px solid #2563eb' : '2px solid transparent',
+                    opacity: activeImageIndex === idx ? 1 : 0.6,
                     transition: 'all 0.2s'
                   }}
                 >
@@ -192,26 +239,76 @@ export default function PostDetail() {
           )}
         </div>
 
-        {/* CỘT PHẢI: CHI TIẾT SẢN PHẨM & THÔNG TIN NGƯỜI BÁN NẰM DƯỚI NÚT BẤM */}
+        {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
         <div className="post-info-panel">
-          <div className="detail-eyebrow">CHI TIẾT BÀI ĐĂNG</div>
-          <div className="post-title-row">
-            <h1>{product.name || "Sản phẩm chưa có tên"}</h1>
-            <span className={`status-pill ${available ? "available" : "unavailable"}`}>
-              {product.status || "Chưa rõ trạng thái"}
+          <div>
+            <span style={{ display: 'inline-block', backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', marginBottom: '8px' }}>
+              {deviceLabels[product?.deviceType] || product?.deviceType || 'Sản phẩm'}
             </span>
+            <div className="post-title-row">
+              <h1>{product.name || "Sản phẩm chưa có tên"}</h1>
+              <span className={`status-pill ${available ? "available" : "unavailable"}`}>
+                {product.status || "Chưa rõ trạng thái"}
+              </span>
+            </div>
           </div>
+
           <div className="post-price">{money(product.price)}</div>
-          <p className="post-description">{product.description || "Người bán chưa cung cấp mô tả cho sản phẩm này."}</p>
+          
+          <p className="post-description">
+            {product.description || "Người bán chưa cung cấp mô tả chi tiết cho sản phẩm này."}
+          </p>
 
+          {/* CÁC THÔNG SỐ (FACTS) & TÁC GIẢ NẰM DƯỚI ĐỊA ĐIỂM */}
           <div className="detail-facts">
-            <div><Package size={16}/><span>Số lượng kho</span><strong>{product.amount ?? "—"}</strong></div>
-            <div><MapPin size={16}/><span>Địa điểm</span><strong>{product.local || "Chưa cập nhật"}</strong></div>
-            <div><CalendarDays size={16}/><span>Ngày đăng</span><strong>{dateText(product.startDate || product.createdAt)}</strong></div>
-            {product.endDate && <div><CalendarDays size={16}/><span>Ngày kết thúc</span><strong>{dateText(product.endDate)}</strong></div>}
+            <div className="fact-item">
+              <Package size={18} color="#2563eb"/>
+              <div>
+                <div style={{ fontSize: '11px' }}>Số lượng kho</div>
+                <strong>{product.amount ?? "—"} sản phẩm</strong>
+              </div>
+            </div>
+
+            <div className="fact-item">
+              <MapPin size={18} color="#dc2626"/>
+              <div>
+                <div style={{ fontSize: '11px' }}>Địa điểm giao dịch</div>
+                <strong>{product.local || "Cơ sở 1"}</strong>
+              </div>
+            </div>
+
+            {/* Thông tin tác giả nằm ngay dưới phần địa điểm */}
+            <div 
+              onClick={() => { if (authorInfo.id && authorInfo.id !== '#') navigate(`/user/${authorInfo.id}`); }}
+              className="fact-item"
+              style={{ gridColumn: 'span 2', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'background 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+              title="Nhấn để xem trang cá nhân người đăng"
+            >
+              {authorInfo?.avatar ? (
+                <img src={authorInfo.avatar} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }} />
+              ) : (
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <UserRound size={20} />
+                </div>
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>Người đăng bán</div>
+                <strong style={{ fontSize: '14px', color: '#2563eb' }}>{authorInfo?.name || "Thành viên VLU"}</strong>
+              </div>
+            </div>
+
+            <div className="fact-item" style={{ gridColumn: 'span 2' }}>
+              <CalendarDays size={18} color="#059669"/>
+              <div>
+                <div style={{ fontSize: '11px' }}>Ngày đăng tin</div>
+                <strong>{dateText(product.startDate || product.createdAt)}</strong>
+              </div>
+            </div>
           </div>
 
-          {/* BỘ CHỌN SỐ LƯỢNG MUA */}
+          {/* CHỌN SỐ LƯỢNG */}
           {available && (
             <div className="quantity-selector-box">
               <span style={{ fontWeight: '600', color: '#334155', fontSize: '13px' }}>Chọn số lượng mua:</span>
@@ -223,62 +320,14 @@ export default function PostDetail() {
             </div>
           )}
 
-          {/* CÁC NÚT HÀNH ĐỘNG */}
-          <div className="post-actions" style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              className="detail-btn primary" 
-              disabled={!available} 
-              style={{ flex: 1 }} 
-              onClick={() => alert(`Đã chuyển tới trang thanh toán cho ${qty} sản phẩm!`)}>
+          {/* NÚT HÀNH ĐỘNG */}
+          <div className="post-actions">
+            <button className="detail-btn primary" disabled={!available} onClick={handleBuyNow}>
               {available ? `Mua ngay (${qty})` : "Sản phẩm đã hết hàng"}
             </button>
-            <button 
-              className="detail-btn secondary" 
-              disabled={!available} 
-              style={{ flex: 1 }} 
-              onClick={() => alert(`Đã thêm ${qty} sản phẩm vào giỏ hàng!`)}>
-              <ShoppingCart size={17}/> {available ? "Thêm vào giỏ" : "Hết hàng"}
+            <button className="detail-btn secondary" disabled={!available} onClick={handleAddToCart}>
+              <ShoppingCart size={18}/> {available ? "Thêm vào giỏ" : "Hết hàng"}
             </button>
-          </div>
-
-          {/* THÔNG TIN NGƯỜI BÁN (Nằm gọn gàng ở cột phải, loại bỏ hoàn toàn khoảng trống) */}
-          <div 
-            onClick={() => {
-              if (authorInfo.id && authorInfo.id !== '#') {
-                navigate(`/user/${authorInfo.id}`);
-              }
-            }}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              padding: '12px 16px', 
-              backgroundColor: '#f8fafc', 
-              borderRadius: '10px', 
-              border: '1px solid #e2e8f0', 
-              cursor: 'pointer', 
-              transition: 'background 0.2s',
-              marginTop: '4px'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-            title="Nhấn để xem trang thông tin người bán"
-          >
-            {authorInfo?.avatar ? (
-              <img 
-                src={authorInfo.avatar} 
-                alt={authorInfo?.name} 
-                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #cbd5e1' }} 
-              />
-            ) : (
-              <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <UserRound size={22}/>
-              </div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Người đăng bán</span>
-              <span style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>{authorInfo?.name || "Thành viên VLU"}</span>
-            </div>
           </div>
 
         </div>

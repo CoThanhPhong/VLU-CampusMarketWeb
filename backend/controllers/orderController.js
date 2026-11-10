@@ -61,23 +61,10 @@ exports.getMyOrders = async (req, res) => {
   try {
     const userId = req.user.id; 
 
-    // 1. Kiểm tra xem danh sách đơn hàng đã được lưu trong session chưa
-    if (req.session && req.session.myOrders) {
-      return res.status(200).json({ 
-        success: true, 
-        data: req.session.myOrders 
-      });
-    }
-
-    // 2. Nếu chưa có trong session, tiến hành query từ Database
+    // BỎ đoạn check session myOrders đi để luôn query dữ liệu mới nhất từ Database chuẩn xác 100%
     const orders = await Order.find({ user: userId })
       .populate('orderItems.product', 'name img deviceType')
       .sort({ createdAt: -1 });
-
-    // 3. Lưu kết quả vào Session để dùng cho các lần gọi sau
-    if (req.session) {
-      req.session.myOrders = orders;
-    }
 
     return res.status(200).json({ 
       success: true, 
@@ -152,7 +139,7 @@ exports.confirmOrderPayment = async (req, res) => {
     // Cập nhật trạng thái thanh toán và đơn hàng
     foundOrder.isPaid = true;
     foundOrder.paidAt = Date.now();
-    foundOrder.orderStatus = 'Đã thanh toán'; // Hoặc 'Đã xác nhận' tùy luồng của bạn
+    foundOrder.orderStatus = 'Đã xác nhận'; // Hoặc 'Đã xác nhận' tùy luồng của bạn
 
     const updatedOrder = await foundOrder.save();
 
@@ -198,5 +185,80 @@ exports.getSellerOrders = async (req, res) => {
   } catch (error) {
     console.error("Lỗi lấy đơn hàng người bán:", error.message);
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+// 6. Xác nhận thanh toán từng sản phẩm cho Người bán
+exports.confirmOrderItem = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.body;
+    const sellerId = req.user._id || req.user.id;
+
+    const order = await Order.findById(orderId).populate({
+      path: 'orderItems.product',
+      select: 'name img price author seller'
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+    }
+
+    let foundItem = false;
+
+    order.orderItems.forEach(item => {
+      const currentItemId = item._id.toString();
+      const productId = item.product?._id ? item.product._id.toString() : item.product?.toString();
+
+      if (currentItemId === itemId || productId === itemId) {
+        const authorField = item.product?.author || item.product?.seller || item.author;
+        const authorId = typeof authorField === 'object' ? authorField?._id?.toString() : authorField?.toString();
+
+        if (authorId && authorId !== sellerId.toString()) {
+          throw new Error('UNAUTHORIZED');
+        }
+
+        foundItem = true;
+        item.isPaid = true;
+        item.status = 'Đã xác nhận';
+      }
+    });
+
+    if (!foundItem) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm trong đơn hàng' });
+    }
+
+    const allItemsConfirmed = order.orderItems.every(i => i.isPaid === true || i.status === 'Đã xác nhận');
+
+    if (allItemsConfirmed) {
+      order.orderStatus = 'Đã xác nhận';
+      order.isPaid = true;
+      order.paidAt = Date.now();
+    } else {
+      order.orderStatus = 'Chờ xác nhận';
+      order.isPaid = false;
+    }
+
+    await order.save();
+
+    // ==========================================
+    // KHẮC PHỤC LỖI CACHE SESSION:
+    // Xóa session myOrders của người mua (order.user) nếu server có lưu cache theo session map.
+    // Hoặc đơn giản là reset toàn bộ session.myOrders hiện hành để bắt buộc query từ DB.
+    // ==========================================
+    if (req.session) {
+      delete req.session.myOrders;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Xác nhận sản phẩm thành công!',
+      data: order
+    });
+
+  } catch (err) {
+    if (err.message === 'UNAUTHORIZED') {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền xác nhận sản phẩm này' });
+    }
+    console.error('Lỗi confirm-item:', err);
+    return res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ' });
   }
 };

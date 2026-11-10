@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import '../../css/CustomModal.css';
 
 export default function CheckoutPage() {
   const user = sessionStorage.getItem('user');
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [notification, setNotification] = useState(null);
+
   const [formData, setFormData] = useState({
     fullName: user ? JSON.parse(user).profile.name : '',
     phone: user ? JSON.parse(user).profile.phone : '',
     local: 'Cơ sở 1',
     paymentMethod: 'COD'
   });
+
+  const showToast = (msg, type = 'success') => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   useEffect(() => {
     const savedItems = sessionStorage.getItem('checkoutItems');
@@ -55,15 +64,15 @@ export default function CheckoutPage() {
       });
 
       if (response.data.success) {
-        alert('Đặt hàng thành công!');
+        showToast('Đặt hàng thành công!', 'success');
         sessionStorage.removeItem('checkoutItems');
         sessionStorage.removeItem('cartItems');
         window.dispatchEvent(new Event('cartUpdated'));
-        navigate('/orders');
+        setTimeout(() => navigate('/orders'), 1000);
       }
     } catch (error) {
       console.error("Lỗi tạo đơn hàng:", error);
-      alert(error.response?.data?.message || 'Đặt hàng thất bại, vui lòng kiểm tra lại.');
+      showToast(error.response?.data?.message || 'Đặt hàng thất bại, vui lòng kiểm tra lại.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -71,6 +80,15 @@ export default function CheckoutPage() {
 
   return (
     <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto' }}>
+      {notification && (
+        <div className="custom-toast-container">
+          <div className={`custom-toast ${notification.type}`}>
+            {notification.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+            {notification.msg}
+          </div>
+        </div>
+      )}
+
       <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', color: '#333' }}>Xác Nhận Đơn Hàng & Thanh Toán</h2>
       
       <form onSubmit={handleOrderSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>

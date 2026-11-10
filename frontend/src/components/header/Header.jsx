@@ -1,14 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import UserMenu from "../userMenu/UserMenu";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Header = ({ isOpen, setIsOpen }) => {
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [uniqueItemCount, setUniqueItemCount] = useState(0);
-  const userMenuRef = useRef(null);
+  const location = useLocation();
 
-  // Hàm đọc dữ liệu user an toàn
   const getUserFromStorage = () => {
     try {
       const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
@@ -18,10 +16,7 @@ const Header = ({ isOpen, setIsOpen }) => {
     }
   };
 
-  // State lưu trữ user ở Header
   const [currentUser, setCurrentUser] = useState(getUserFromStorage);
-  
-  // Lấy avatar linh hoạt cả từ profile.avatar hoặc avatar gốc
   const userAvatar = currentUser?.profile?.avatar || currentUser?.avatar || "";
 
   const fetchCartCount = async () => {
@@ -29,29 +24,39 @@ const Header = ({ isOpen, setIsOpen }) => {
       const response = await axios.get("/api/cart/g", {
         withCredentials: true,
       });
-      if (response.data.success && Array.isArray(response.data.data)) {
-        setUniqueItemCount(response.data.data.length);
+      
+      if (response.data.success) {
+        const cartData = response.data.data || response.data.items || [];
+        const items = Array.isArray(cartData) ? cartData : (cartData.items || []);
+        const totalQty = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        setUniqueItemCount(totalQty);
+        return;
       }
     } catch (error) {
       console.error("Lỗi lấy số lượng giỏ hàng cho header:", error);
-      try {
-        const savedCart = sessionStorage.getItem("cartItems");
-        setUniqueItemCount(savedCart ? JSON.parse(savedCart).length : 0);
-      } catch (e) {
+    }
+
+    try {
+      const savedCart = sessionStorage.getItem("cartItems");
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        const totalQty = parsed.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        setUniqueItemCount(totalQty);
+      } else {
         setUniqueItemCount(0);
       }
+    } catch (e) {
+      setUniqueItemCount(0);
     }
   };
 
   useEffect(() => {
     fetchCartCount();
 
-    // Hàm cập nhật lại thông tin user khi có sự kiện thay đổi hồ sơ
     const handleUserUpdated = () => {
       setCurrentUser(getUserFromStorage());
     };
 
-    // Lắng nghe các sự kiện giỏ hàng và user
     const handleCartUpdated = () => {
       fetchCartCount();
     };
@@ -67,18 +72,49 @@ const Header = ({ isOpen, setIsOpen }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const isCartActive = location.pathname === "/cart";
 
   return (
     <header className="header">
+      <style>{`
+        /* Ép buộc tất cả các nút icon trên header luôn giữ hiệu ứng nền khi hover, active hoặc đang được tương tác */
+        .menu-btn:hover, .menu-btn.active,
+        .icon-btn:hover, .icon-btn.active,
+        .user-btn:hover, .user-btn:active,
+        .cart-icon-btn:hover, .cart-icon-btn.active {
+          background-color: rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Vùng chứa UserMenu với kỹ thuật "Hover Bridge" chống mất bảng menu */
+        .user-menu-container {
+          position: relative;
+          display: inline-block;
+        }
+
+        /* Tạo khoảng đệm vô hình (padding-top) để khi chuột di chuyển từ nút avatar vào menu không bị rớt */
+        .user-dropdown-wrapper {
+          display: none;
+          position: absolute;
+          right: 0;
+          top: 100%;
+          padding-top: 8px;
+          z-index: 1000;
+        }
+
+        .user-menu-container:hover .user-dropdown-wrapper {
+          display: block;
+        }
+
+        .user-dropdown-content {
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+          min-width: 220px;
+        }
+      `}</style>
+
       <div className="header-left">
         <button
           className={`menu-btn ${isOpen ? "active" : ""}`}
@@ -105,10 +141,11 @@ const Header = ({ isOpen, setIsOpen }) => {
       </div>
 
       <div className="header-right">
+        {/* Nút giỏ hàng */}
         <Link
           to="/cart"
-          className="icon-btn"
-          style={{ position: "relative", display: "inline-flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
+          className={`icon-btn cart-icon-btn ${isCartActive ? "active" : ""}`}
+          style={{ position: "relative", display: "inline-flex", alignItems: "center", textDecoration: "none", color: "inherit", padding: "8px", borderRadius: "8px", transition: "background-color 0.2s" }}
           title="Giỏ hàng"
         >
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -134,10 +171,22 @@ const Header = ({ isOpen, setIsOpen }) => {
           )}
         </Link>
 
-        <div className="user-menu-container" ref={userMenuRef}>
+        {/* Khu vực UserMenu dùng thẻ <button> chuẩn để nhận diện trọn vẹn hiệu ứng active/hover */}
+        <div className="user-menu-container">
           <button
-            className={`icon-btn user-btn ${showUserMenu ? "active" : ""}`}
-            onClick={() => setShowUserMenu(!showUserMenu)}
+            type="button"
+            className="icon-btn user-btn"
+            style={{ 
+              cursor: "pointer", 
+              display: "flex", 
+              alignItem: "center", 
+              justifyContent: "center",
+              padding: "6px", 
+              borderRadius: "8px", 
+              border: "none", 
+              background: "transparent",
+              transition: "background-color 0.2s" 
+            }}
           >
             {userAvatar ? (
               <img
@@ -169,9 +218,10 @@ const Header = ({ isOpen, setIsOpen }) => {
             )}
           </button>
 
-          <div className={`user-dropdown-wrapper ${showUserMenu ? "active" : ""}`}>
-            {/* Truyền user mới xuống UserMenu để đồng bộ thông tin trong menu thả xuống */}
-            <UserMenu user={currentUser} />
+          <div className="user-dropdown-wrapper">
+            <div className="user-dropdown-content">
+              <UserMenu user={currentUser} />
+            </div>
           </div>
         </div>
       </div>

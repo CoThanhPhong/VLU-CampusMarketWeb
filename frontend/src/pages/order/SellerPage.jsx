@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CheckCircle, Clock, AlertCircle, DollarSign, XCircle, Radio } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, DollarSign, XCircle } from 'lucide-react';
+import { ConfirmModal } from '../../components/toast/ConfirmModal';
+import '../../css/CustomModal.css';
 import '../../css/SellerPage.css';
 
 export default function SellerPage() {
@@ -8,6 +10,31 @@ export default function SellerPage() {
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [currentSellerId, setCurrentSellerId] = useState(null);
+
+  // State quản lý Modal Xác nhận
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+
+  const showToast = (msg, type = 'success') => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await axios.get('/api/auth/profile', { withCredentials: true });
+      if (res.data && res.data.success) {
+        setCurrentSellerId(res.data.data?._id || res.data.data?.id);
+      }
+    } catch (err) {
+      console.error('Không thể lấy thông tin user hiện tại:', err);
+    }
+  };
 
   const fetchSellerPage = async (isBackground = false) => {
     try {
@@ -18,7 +45,7 @@ export default function SellerPage() {
       }
     } catch (err) {
       if (!isBackground) {
-        showNotification(err.response?.data?.message || 'Không thể tải đơn hàng người bán', 'error');
+        showToast(err.response?.data?.message || 'Không thể tải đơn hàng người bán', 'error');
       }
     } finally {
       if (!isBackground) setLoading(false);
@@ -26,9 +53,10 @@ export default function SellerPage() {
   };
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchSellerPage();
-    // Tự động đồng bộ ngầm định kỳ từ DB mỗi 5 giây
-    const intervalId = setInterval(() => fetchSellerPage(true), 5000);
+
+    const intervalId = setInterval(() => fetchSellerPage(true), 5 * 60 * 1000);
     const handleFocus = () => fetchSellerPage(true);
     window.addEventListener('focus', handleFocus);
 
@@ -38,50 +66,67 @@ export default function SellerPage() {
     };
   }, []);
 
-  const handleConfirmPayment = async (orderId) => {
-    if (!window.confirm('Xác nhận đã nhận tiền thanh toán cho đơn hàng này?')) return;
+  const handleConfirmItemPayment = (orderId, itemId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xác nhận thanh toán',
+      message: 'Xác nhận đã nhận tiền thanh toán cho sản phẩm này?',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          setBtnLoading(itemId || orderId);
+          const res = await axios.put('/api/orders/confirm-item', { orderId, itemId }, { withCredentials: true });
 
-    try {
-      setBtnLoading(orderId);
-      const res = await axios.put('/api/orders/confirm', { orderId }, { withCredentials: true });
-
-      if (res.data.success) {
-        setOrders(prev =>
-          prev.map(ord => ord._id === orderId ? { ...ord, isPaid: true, orderStatus: 'Đã thanh toán' } : ord)
-        );
-        showNotification(`Đã xác nhận đơn #${orderId.slice(-6)}!`, 'success');
+          if (res.data.success) {
+            setOrders(prev =>
+              prev.map(ord => ord._id === orderId ? res.data.data : ord)
+            );
+            showToast('Đã xác nhận thành công sản phẩm!', 'success');
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Lỗi khi xác nhận', 'error');
+        } finally {
+          setBtnLoading(null);
+        }
       }
-    } catch (err) {
-      showNotification(err.response?.data?.message || 'Lỗi khi xác nhận', 'error');
-    } finally {
-      setBtnLoading(null);
-    }
+    });
   };
 
-  const showNotification = (msg, type) => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
+  const pendingCount = orders.filter(ord => {
+    // Bỏ qua đơn hàng đã bị hủy
+    if (ord.orderStatus === 'Đã hủy') return false;
 
-  // Tính số lượng đơn đang chờ xác nhận thực tế
-  const pendingCount = orders.filter(ord => !ord.isPaid && ord.orderStatus !== 'Đã hủy').length;
+    // Kiểm tra xem trong đơn có sản phẩm nào thuộc về seller này mà chưa được xác nhận không
+    const hasUnpaidSellerItems = ord.orderItems.some(item => {
+      const authorField = item.product?.author || item.product?.seller || item.author;
+      const authorId = typeof authorField === 'object' ? authorField?._id : authorField;
+      
+      const isMyProduct = !currentSellerId || String(authorId) === String(currentSellerId);
+      const isNotPaid = !(item.isPaid === true || item.status === 'Đã xác nhận');
+
+      return isMyProduct && isNotPaid;
+    });
+
+    return hasUnpaidSellerItems;
+  }).length;
 
   return (
     <div className="seller-orders-container">
-      <div className="seller-orders-header">
-        <div>
-          <h1>Đơn Hàng Cần Xử Lý ({pendingCount} đơn chờ xác nhận)</h1>
-          <p>Danh sách đơn hàng của các sản phẩm bạn đang đăng bán</p>
-        </div>
-      
-      </div>
-
       {notification && (
-        <div className={`alert-toast ${notification.type}`}>
-          {notification.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-          {notification.msg}
+        <div className="custom-toast-container">
+          <div className={`custom-toast ${notification.type}`}>
+            {notification.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+            {notification.msg}
+          </div>
         </div>
       )}
+
+      <div className="seller-orders-header">
+        <div>
+          <h1>Đơn Hàng Cần Xử Lý {pendingCount != 0 ? `${pendingCount} đơn chờ xác nhận`: ""}</h1>
+          <p>Danh sách đơn hàng của các sản phẩm bạn đang đăng bán</p>
+        </div>
+      </div>
 
       {loading ? (
         <div className="orders-loading">Đang kiểm tra đơn hàng...</div>
@@ -89,88 +134,125 @@ export default function SellerPage() {
         <div className="orders-empty">Chưa có ai đặt mua sản phẩm của bạn.</div>
       ) : (
         <div className="orders-list">
-          {orders.map(order => (
-            <div key={order._id} className="order-card">
-              <div className="order-card-header">
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Mã đơn:</span>
-                  <span className="order-id">{order._id}</span>
-                  <span className="order-date">
-                    {new Date(order.createdAt).toLocaleString('vi-VN')}
+          {orders.map(order => {
+            const filteredItems = order.orderItems.filter(item => {
+              if (!currentSellerId) return true;
+              const authorField = item.product?.author || item.product?.seller || item.author || item.seller;
+              const authorId = typeof authorField === 'object' ? authorField?._id || authorField?.id : authorField;
+              return String(authorId) === String(currentSellerId);
+            });
+
+            if (filteredItems.length === 0) return null;
+
+            const sellerTotalIncome = filteredItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const isAllSellerItemsPaid = filteredItems.every(item => item.isPaid === true || item.status === 'Đã xác nhận');
+
+            return (
+              <div key={order._id} className="order-card">
+                <div className="order-card-header">
+                  <div>
+                    <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Mã đơn:</span>
+                    <span className="order-id">{order._id}</span>
+                    <span className="order-date">
+                      {new Date(order.createdAt).toLocaleString('vi-VN')}
+                    </span>
+                  </div>
+
+                  <span className={`status-badge ${
+                    order.orderStatus === 'Đã hủy' 
+                      ? 'cancelled' 
+                      : isAllSellerItemsPaid 
+                      ? 'paid' 
+                      : 'pending'
+                  }`}>
+                    {order.orderStatus === 'Đã hủy' ? (
+                      <><XCircle size={14} /> Người mua đã hủy</>
+                    ) : isAllSellerItemsPaid ? (
+                      <><CheckCircle size={14} /> Đã xác nhận</>
+                    ) : (
+                      <><Clock size={14} /> Chờ người bán xác nhận</>
+                    )}
                   </span>
                 </div>
 
-                <span className={`status-badge ${
-                  order.orderStatus === 'Đã hủy' 
-                    ? 'cancelled' 
-                    : order.isPaid 
-                    ? 'paid' 
-                    : 'pending'
-                }`}>
-                  {order.orderStatus === 'Đã hủy' ? (
-                    <><XCircle size={14} /> Người mua đã hủy</>
-                  ) : order.isPaid ? (
-                    <><CheckCircle size={14} /> Đã thanh toán</>
-                  ) : (
-                    <><Clock size={14} /> Chờ người bán xác nhận</>
-                  )}
-                </span>
-              </div>
-
-              <div className="order-card-body">
-                <div className="buyer-info-box">
-                  <div className="title">Thông tin người mua</div>
-                  <p className="buyer-name">{order.shippingInfo?.fullName}</p>
-                  <p><b>SĐT:</b> {order.shippingInfo?.phone}</p>
-                  <p><b>Cơ sở nhận:</b> {order.shippingInfo?.local}</p>
-                  <p><b>PTTT:</b> {order.paymentMethod}</p>
-                </div>
-
-                <div className="order-items-list">
-                  {order.orderItems.map((item, idx) => (
-                    <div key={idx} className="product-item">
-                      <img src={item.product?.img || 'https://via.placeholder.com/50'} alt="" className="product-img" />
-                      <div className="product-details">
-                        <p className="product-name">{item.product?.name || item.name}</p>
-                        <p className="product-qty">Số lượng: {item.quantity} | Giao tại: {item.local}</p>
-                      </div>
-                      <div className="product-price">
-                        {(item.price * item.quantity).toLocaleString('vi-VN')} VNĐ
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="order-card-footer">
-                <div>
-                  <span className="total-price-label">Tổng thu nhập:</span>
-                  <span className="total-price-amount">{order.totalPrice?.toLocaleString('vi-VN')} VNĐ</span>
-                </div>
-
-                {order.orderStatus === 'Đã hủy' ? (
-                  <div className="status-completed" style={{ color: '#ef4444', backgroundColor: '#fef2f2' }}>
-                    <XCircle size={16} color="#ef4444" /> Đơn hàng đã bị hủy
+                <div className="order-card-body">
+                  <div className="buyer-info-box">
+                    <div className="title">Thông tin người mua</div>
+                    <p className="buyer-name">{order.shippingInfo?.fullName}</p>
+                    <p><b>SĐT:</b> {order.shippingInfo?.phone}</p>
+                    <p><b>Cơ sở nhận:</b> {order.shippingInfo?.local}</p>
+                    <p><b>PTTT:</b> {order.paymentMethod}</p>
                   </div>
-                ) : !order.isPaid ? (
-                  <button
-                    onClick={() => handleConfirmPayment(order._id)}
-                    disabled={btnLoading === order._id}
-                    className="btn-confirm-payment"
-                  >
-                    <DollarSign size={16} />
-                    {btnLoading === order._id ? 'Đang xử lý...' : 'Xác Nhận Đã Nhận Tiền'}
-                  </button>
-                ) : (
-                  <div className="status-completed">
-                    <CheckCircle size={16} color="#16a34a" /> Đã xác nhận thanh toán
+
+                  <div className="order-items-list">
+                    {filteredItems.map((item, idx) => {
+                      const itemId = item._id || item.product?._id;
+                      const isItemPaid = item.isPaid === true || item.status === 'Đã xác nhận';
+
+                      return (
+                        <div key={idx} className="product-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #eee' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <img 
+                              src={Array.isArray(item.product?.img) ? item.product.img[0] : (item.product?.img || 'https://via.placeholder.com/50')} 
+                              alt="" 
+                              className="product-img" 
+                              style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} 
+                            />
+                            <div className="product-details">
+                              <p className="product-name" style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>{item.product?.name || item.name}</p>
+                              <p className="product-qty" style={{ margin: 0, fontSize: '13px', color: '#666' }}>Số lượng: {item.quantity} | Giao tại: {item.local}</p>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div className="product-price" style={{ fontWeight: 'bold', color: '#e74c3c' }}>
+                              {(item.price * item.quantity).toLocaleString('vi-VN')} VNĐ
+                            </div>
+
+                            {order.orderStatus === 'Đã hủy' ? (
+                              <span style={{ fontSize: '12px', color: '#ef4444' }}>Đã hủy</span>
+                            ) : isItemPaid ? (
+                              <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <CheckCircle size={14} /> Đã xác nhận
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleConfirmItemPayment(order._id, itemId)}
+                                disabled={btnLoading === itemId || btnLoading === order._id}
+                                className="btn-confirm-payment"
+                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                              >
+                                <DollarSign size={14} />
+                                {btnLoading === itemId ? 'Đang xử lý...' : 'Xác Nhận'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
+
+                <div className="order-card-footer">
+                  <div>
+                    <span className="total-price-label">Tổng thu nhập (sản phẩm của bạn):</span>
+                    <span className="total-price-amount">{sellerTotalIncome.toLocaleString('vi-VN')} VNĐ</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {/* MODAL XÁC NHẬN CHUNG */}
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

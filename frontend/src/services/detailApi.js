@@ -34,10 +34,22 @@ export async function getProducts() {
 }
 
 export async function getProductDetail(productId) {
-  const result = await request(`/products/g?id=${encodeURIComponent(productId)}`);
-  const product = Array.isArray(result.data) ? result.data[0] : result.data;
-  if (!product) throw new Error("Không tìm thấy bài đăng.");
-  return product;
+  if (!productId) throw new Error("ID sản phẩm không hợp lệ.");
+  
+  // Sửa lại gọi đúng endpoint chi tiết theo ID của MongoDB: /products/g/{id}
+  // Hoặc lọc chuẩn xác trong mảng trả về nếu backend dùng chung endpoint liệt kê
+  try {
+    const result = await request(`/products/g/${productId}`);
+    const product = result.data || result;
+    if (product) return product;
+  } catch (err) {
+    // Fallback: Nếu backend yêu cầu gọi danh sách rồi tìm theo id
+    const allProducts = await getProducts();
+    const found = allProducts.find(p => String(p._id || p.id) === String(productId));
+    if (found) return found;
+  }
+
+  throw new Error("Không tìm thấy bài đăng.");
 }
 
 export async function getUserDetail(userId) {

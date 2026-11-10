@@ -12,6 +12,7 @@ router.get('/g', verifyToken, orderController.getMyOrders);
 // 3. Hủy đơn hàng
 router.put('/cancel', verifyToken, orderController.cancelOrder);
 router.put('/confirm', verifyToken, orderController.confirmOrderPayment);
+router.put('/confirm-item', verifyToken, orderController.confirmOrderItem);
 router.get('/seller/g', verifyToken, orderController.getSellerOrders);
 
 

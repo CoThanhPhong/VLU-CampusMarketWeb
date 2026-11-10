@@ -46,7 +46,6 @@ const createProduct = async (req, res) => {
 };
 
 // 2. READ (Single/All): Lấy danh sách sản phẩm hoặc chi tiết một sản phẩm
-// 2. READ (Single/All): Lấy danh sách sản phẩm hoặc chi tiết một sản phẩm
 const getProductById = async (req, res) => {
   try {
     let product;

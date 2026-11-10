@@ -26,6 +26,11 @@ const OrderSchema = new mongoose.Schema({
         type: String, 
         enum: ["Cơ sở 1", "Cơ sở 2", "Cơ sở 3"], 
         required: true 
+      },
+      status: {
+        type: String,
+        enum: ["Chờ xác nhận", "Đã xác nhận", "Đã hủy"],
+        default: "Chờ xác nhận"
       }
     }
   ],
@@ -50,7 +55,7 @@ const OrderSchema = new mongoose.Schema({
   },
   orderStatus: {
     type: String,
-    enum: ["Chờ xác nhận", "Đang chuẩn bị hàng", "Đang giao", "Đã hoàn thành", "Đã hủy"],
+    enum: ["Chờ xác nhận", "Đã xác nhận", "Đã hủy"],
     default: "Chờ xác nhận"
   },
   isPaid: { 

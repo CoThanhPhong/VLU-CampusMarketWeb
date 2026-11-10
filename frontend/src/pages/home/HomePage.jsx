@@ -6,7 +6,7 @@ import Footer from '../../components/footer/Footer';
 import '../../css/HomePage.css'
 
 const HomePage = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="layout">
