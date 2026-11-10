@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, CalendarDays, Package, UserRound, ShoppingCart, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
-import { getProductDetail, getProductOwnerId, normalizeUser } from "../../services/detailApi";
 import axios from "axios";
+import {getProductDetail, getProductOwnerId, normalizeUser } from "../../services/detailApi"
 import "../../css/ProductDetail.css";
 import "../../css/CustomModal.css";
 

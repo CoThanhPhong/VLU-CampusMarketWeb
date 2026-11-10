@@ -219,7 +219,7 @@
 /* TẠO THANH SCROLL RIÊNG CHO KHU VỰC NỘI DUNG MAIN */
 .content {
   flex: 1;
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto; /* Tự động xuất hiện thanh cuộn khi nội dung dài */
   height: 100%;
 }
