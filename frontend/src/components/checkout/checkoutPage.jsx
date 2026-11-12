@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, HelpCircle } from 'lucide-react';
 import '../../css/CustomModal.css';
 
 export default function CheckoutPage() {
@@ -10,6 +10,9 @@ export default function CheckoutPage() {
   const [items, setItems] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState(null);
+  
+  // State quản lý hiển thị popup xác nhận hủy
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: user ? JSON.parse(user).profile.name : '',
@@ -44,7 +47,7 @@ export default function CheckoutPage() {
 
     const orderPayload = {
       orderItems: items.map(item => ({
-        product: item.product,
+        product: item.product || item._id,
         quantity: item.quantity,
         price: item.price,
         local: item.local
@@ -65,9 +68,31 @@ export default function CheckoutPage() {
 
       if (response.data.success) {
         showToast('Đặt hàng thành công!', 'success');
+        
+        // --- XỬ LÝ LỌC GIỎ HÀNG: CHỈ XÓA SẢN PHẨM ĐÃ MUA, GIỮ LẠI SẢN PHẨM CÒN LẠI ---
+        let currentCart = [];
+        try {
+          const savedCart = sessionStorage.getItem('cartItems');
+          if (savedCart) currentCart = JSON.parse(savedCart);
+        } catch (err) { currentCart = []; }
+
+        // Lấy danh sách ID các sản phẩm vừa thanh toán thành công
+        const purchasedIds = items.map(i => String(i.product || i._id));
+
+        // Lọc giỏ hàng: Giữ lại những sản phẩm KHÔNG nằm trong danh sách vừa thanh toán
+        const remainingCart = currentCart.filter(item => {
+          const itemId = String(item.product || item._id);
+          return !purchasedIds.includes(itemId);
+        });
+
+        // Cập nhật lại giỏ hàng mới lên Session và Server
+        sessionStorage.setItem('cartItems', JSON.stringify(remainingCart));
+        await axios.post('/api/cart/u', { items: remainingCart }, { withCredentials: true }).catch(() => {});
+
+        // Xóa dữ liệu checkout tạm thời
         sessionStorage.removeItem('checkoutItems');
-        sessionStorage.removeItem('cartItems');
         window.dispatchEvent(new Event('cartUpdated'));
+
         setTimeout(() => navigate('/orders'), 1000);
       }
     } catch (error) {
@@ -79,12 +104,59 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '30px', maxWidth: '800px', margin: '0 auto', position: 'relative' }}>
       {notification && (
         <div className="custom-toast-container">
           <div className={`custom-toast ${notification.type}`}>
             {notification.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
             {notification.msg}
+          </div>
+        </div>
+      )}
+
+      {/* POPUP MODAL XÁC NHẬN HỦY TÙY CHỈNH */}
+      {showCancelModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(2px)'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff', padding: '24px', borderRadius: '12px',
+            width: '100%', maxWidth: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            textAlign: 'center', animation: 'fadeIn 0.2s ease-in-out'
+          }}>
+            <div style={{ color: '#f59e0b', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+              <HelpCircle size={48} />
+            </div>
+            <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '18px', fontWeight: '700' }}>
+              Xác nhận hủy thanh toán?
+            </h3>
+            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>
+              Bạn có chắc chắn muốn hủy đơn hàng này không? Sản phẩm được chọn sẽ được giữ lại trong giỏ hàng của bạn.
+            </p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                style={{
+                  flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569',
+                  border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Quay lại
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/cart')}
+                style={{
+                  flex: 1, padding: '10px', backgroundColor: '#dc2626', color: '#ffffff',
+                  border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Đồng ý hủy
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -150,13 +222,25 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <button 
-          type="submit" 
-          disabled={submitting}
-          style={{ padding: '14px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
-        >
-          {submitting ? 'Đang xử lý đơn hàng...' : 'Xác Nhận Đặt Hàng'}
-        </button>
+        {/* KHU VỰC NÚT HÀNH ĐỘNG (XÁC NHẬN & HỦY) */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            type="submit" 
+            disabled={submitting}
+            style={{ flex: 2, padding: '14px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? 'Đang xử lý đơn hàng...' : 'Xác Nhận Đặt Hàng'}
+          </button>
+
+          {/* Nút Hủy mở Custom Modal xác nhận */}
+          <button 
+            type="button" 
+            onClick={() => setShowCancelModal(true)}
+            style={{ flex: 1, padding: '14px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Hủy
+          </button>
+        </div>
       </form>
     </div>
   );

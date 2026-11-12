@@ -21,47 +21,64 @@ const Sidebar = ({ isOpen }) => {
     }
   }, []);
 
-  // Tự động đồng bộ số lượng sản phẩm/đơn hàng cần xác nhận từ DB mỗi 5 giây
-  useEffect(() => {
-    const fetchPendingOrdersCount = async () => {
-      try {
-        const res = await axios.get('/api/orders/seller/g', { withCredentials: true });
-        if (res.data.success && Array.isArray(res.data.data)) {
-          // Lấy ID user hiện tại từ localStorage/sessionStorage hoặc qua API profile để lọc chính xác sản phẩm của người bán
-          let currentSellerId = null;
-          const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
-          if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            currentSellerId = parsedUser._id || parsedUser.id || parsedUser.profile?._id;
-          }
-
-          // Đếm số lượng các item thuộc về người bán này nhưng chưa được xác nhận
-          let count = 0;
-          res.data.data.forEach(order => {
-            if (order.orderStatus !== 'Đã hủy') {
-              order.orderItems.forEach(item => {
-                const authorField = item.product?.author || item.product?.seller || item.author;
-                const authorId = typeof authorField === 'object' ? authorField?._id || authorField?.id : authorField;
-                
-                // Nếu khớp người bán (hoặc đếm tất cả nếu chưa xác định được ID) và item chưa xác nhận
-                const isMatchSeller = !currentSellerId || String(authorId) === String(currentSellerId);
-                if (isMatchSeller && item.status !== 'Đã xác nhận') {
-                  count++;
-                }
-              });
-            }
-          });
-
-          setPendingCount(count);
+  // Hàm gọi API lấy số lượng đơn hàng cần xử lý
+  const fetchPendingOrdersCount = async () => {
+    try {
+      const res = await axios.get('/api/orders/seller/g', { withCredentials: true });
+      if (res.data.success && Array.isArray(res.data.data)) {
+        let currentSellerId = null;
+        const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          currentSellerId = parsedUser._id || parsedUser.id || parsedUser.profile?._id;
         }
-      } catch (err) {
-        // Bỏ qua lỗi ngầm khi chưa phân quyền seller
+
+        let count = 0;
+        res.data.data.forEach(order => {
+          if (order.orderStatus !== 'Đã hủy') {
+            order.orderItems.forEach(item => {
+              const authorField = item.product?.author || item.product?.seller || item.author;
+              const authorId = typeof authorField === 'object' ? authorField?._id || authorField?.id : authorField;
+              
+              const isMatchSeller = !currentSellerId || String(authorId) === String(currentSellerId);
+              if (isMatchSeller && item.status !== 'Đã xác nhận') {
+                count++;
+              }
+            });
+          }
+        });
+
+        setPendingCount(count);
       }
+    } catch (err) {
+      // Bỏ qua lỗi ngầm khi chưa phân quyền seller
+    }
+  };
+
+  useEffect(() => {
+    // 1. Gọi ngay khi component mount
+    fetchPendingOrdersCount();
+
+    // 2. Cập nhật khi người dùng click bất cứ đâu trên màn hình
+    const handleWindowClick = () => {
+      fetchPendingOrdersCount();
     };
 
-    fetchPendingOrdersCount();
-    const interval = setInterval(fetchPendingOrdersCount, 5*60*1000);
-    return () => clearInterval(interval);
+    // 3. Cập nhật khi người dùng chuyển tab/quay lại cửa sổ trình duyệt
+    const handleWindowFocus = () => {
+      fetchPendingOrdersCount();
+    };
+
+    // 4. Lắng nghe các sự kiện đồng bộ
+    window.addEventListener('orderUpdated', fetchPendingOrdersCount);
+    window.addEventListener('click', handleWindowClick);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.removeEventListener('orderUpdated', fetchPendingOrdersCount);
+      window.removeEventListener('click', handleWindowClick);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, []);
 
   const isHomeActive = location.pathname === "/home";

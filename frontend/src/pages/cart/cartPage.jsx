@@ -8,7 +8,7 @@ export default function CartPage() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState({});
+  const [selectedItems, setSelectedItems] = useState({}); // Lưu theo dạng { "productId_local": true }
   const [notification, setNotification] = useState(null);
 
   const showToast = (msg, type = 'success') => {
@@ -16,7 +16,7 @@ export default function CartPage() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Tải giỏ hàng và đồng bộ thông tin tác giả
+  // Tải giỏ hàng, danh sách sản phẩm và phân giải thông tin tác giả đầy đủ
   useEffect(() => {
     let isMounted = true;
 
@@ -26,7 +26,7 @@ export default function CartPage() {
         
         const [cartRes, prodRes] = await Promise.all([
           axios.get('/api/cart/g', { withCredentials: true }).catch(() => null),
-          axios.get('/api/products/g', { withCredentials: true }).catch(() => null)
+          axios.get('/api/products/g?getAll=true', { withCredentials: true }).catch(() => null)
         ]);
 
         if (!isMounted) return;
@@ -39,18 +39,44 @@ export default function CartPage() {
           if (saved) items = JSON.parse(saved);
         }
 
-        const allProducts = prodRes?.data?.data || [];
+        const responseData = prodRes?.data;
+        const allProducts = Array.isArray(responseData) 
+          ? responseData 
+          : (responseData?.data || responseData?.products || []);
 
-        const enrichedItems = items.map(item => {
+        const enrichedItems = await Promise.all(items.map(async (item) => {
           const productId = item.product || item._id;
-          const foundProduct = allProducts.find(p => String(p._id) === String(productId));
-          if (foundProduct && foundProduct.author) {
-            return { ...item, author: foundProduct.author };
-          }
-          return item;
-        });
+          let foundProduct = allProducts.find(p => String(p._id || p.id) === String(productId));
+          
+          let authorData = foundProduct ? foundProduct.author : item.author;
 
-        setCartItems(enrichedItems);
+          if (authorData && typeof authorData === 'string') {
+            try {
+              const userRes = await axios.post('/api/auth/user', { id: authorData });
+              const userData = userRes.data?.data || userRes.data?.user || userRes.data;
+              if (userData) {
+                authorData = userData;
+              }
+            } catch (err) {
+              console.warn("Không thể tải thông tin tác giả cho ID:", authorData);
+            }
+          }
+
+          return { 
+            ...item, 
+            product: productId, // Đảm bảo luôn có trường product chuẩn
+            author: authorData,
+            name: foundProduct?.name || item.name,
+            price: foundProduct?.price ?? item.price,
+            local: foundProduct?.local || item.local,
+            amount: foundProduct?.amount ?? item.amount,
+            img: foundProduct?.img || item.img
+          };
+        }));
+
+        if (isMounted) {
+          setCartItems(enrichedItems);
+        }
       } catch (err) {
         console.warn("Lỗi tải giỏ hàng:", err);
       } finally {
@@ -94,53 +120,66 @@ export default function CartPage() {
   };
 
   const handleRemoveItem = (index) => {
+    const itemToRemove = cartItems[index];
+    const key = `${itemToRemove.product}_${itemToRemove.local || 'Cơ sở 1'}`;
+    
     const updated = cartItems.filter((_, i) => i !== index);
+    const nextSelected = { ...selectedItems };
+    delete nextSelected[key];
+    setSelectedItems(nextSelected);
+
     updateCartOnServer(updated);
     showToast('Đã xóa sản phẩm khỏi giỏ hàng.', 'success');
   };
 
   const handleRemoveSelected = () => {
-    const updated = cartItems.filter((_, index) => !selectedItems[index]);
+    const updated = cartItems.filter(item => {
+      const key = `${item.product}_${item.local || 'Cơ sở 1'}`;
+      return !selectedItems[key];
+    });
     setSelectedItems({});
     updateCartOnServer(updated);
     showToast('Đã xóa các sản phẩm đã chọn.', 'success');
   };
 
-  // Xóa các sản phẩm được chọn riêng cho từng nhóm người bán
-  const handleRemoveStoreSelected = (storeItemIndices) => {
-    const updated = cartItems.filter((_, index) => !storeItemIndices.includes(index) || !selectedItems[index]);
+  const handleRemoveStoreSelected = (storeKeys) => {
+    const updated = cartItems.filter(item => {
+      const key = `${item.product}_${item.local || 'Cơ sở 1'}`;
+      return !storeKeys.includes(key) || !selectedItems[key];
+    });
     
     const nextSelected = { ...selectedItems };
-    storeItemIndices.forEach(idx => delete nextSelected[idx]);
+    storeKeys.forEach(k => delete nextSelected[k]);
     setSelectedItems(nextSelected);
 
     updateCartOnServer(updated);
     showToast('Đã xóa các sản phẩm đã chọn trong nhóm.', 'success');
   };
 
-  const toggleSelectItem = (index) => {
+  const toggleSelectItem = (itemKey) => {
     setSelectedItems(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [itemKey]: !prev[itemKey]
     }));
   };
 
-  const toggleSelectStore = (storeItemsIndexList) => {
-    const allSelected = storeItemsIndexList.every(index => selectedItems[index]);
+  const toggleSelectStore = (storeKeys) => {
+    const allSelected = storeKeys.every(key => selectedItems[key]);
     setSelectedItems(prev => {
       const next = { ...prev };
-      storeItemsIndexList.forEach(index => {
-        next[index] = !allSelected;
+      storeKeys.forEach(key => {
+        next[key] = !allSelected;
       });
       return next;
     });
   };
 
   const toggleSelectAll = () => {
-    const allSelected = cartItems.length > 0 && cartItems.every((_, index) => selectedItems[index]);
+    const allKeys = cartItems.map(item => `${item.product}_${item.local || 'Cơ sở 1'}`);
+    const allSelected = allKeys.length > 0 && allKeys.every(key => selectedItems[key]);
     const next = {};
     if (!allSelected) {
-      cartItems.forEach((_, index) => { next[index] = true; });
+      allKeys.forEach(key => { next[key] = true; });
     }
     setSelectedItems(next);
   };
@@ -154,7 +193,7 @@ export default function CartPage() {
     if (authorField) {
       if (typeof authorField === 'object' && authorField !== null) {
         storeId = String(authorField._id || authorField.id || 'vlu-store-chung');
-        storeName = authorField.profile?.name || authorField.name || 'Thành viên VLU';
+        storeName = authorField.profile?.name || authorField.name || authorField.username || 'Thành viên VLU';
       } else {
         storeId = String(authorField);
         storeName = `Người bán (${String(authorField).slice(-6)})`;
@@ -164,12 +203,14 @@ export default function CartPage() {
     if (!acc[storeId]) {
       acc[storeId] = { storeName, items: [] };
     }
-    acc[storeId].items.push({ ...item, originalIndex: index });
+    const itemKey = `${item.product}_${item.local || 'Cơ sở 1'}`;
+    acc[storeId].items.push({ ...item, originalIndex: index, itemKey });
     return acc;
   }, {});
 
-  const totalSelectedPrice = cartItems.reduce((sum, item, index) => {
-    if (selectedItems[index]) {
+  const totalSelectedPrice = cartItems.reduce((sum, item) => {
+    const itemKey = `${item.product}_${item.local || 'Cơ sở 1'}`;
+    if (selectedItems[itemKey]) {
       return sum + (item.price || 0) * (item.quantity || 1);
     }
     return sum;
@@ -178,7 +219,11 @@ export default function CartPage() {
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
   const handleCheckoutSelected = () => {
-    const itemsToCheckout = cartItems.filter((_, index) => selectedItems[index]);
+    const itemsToCheckout = cartItems.filter(item => {
+      const itemKey = `${item.product}_${item.local || 'Cơ sở 1'}`;
+      return selectedItems[itemKey];
+    });
+
     if (itemsToCheckout.length === 0) {
       showToast('Vui lòng chọn ít nhất một sản phẩm để thanh toán.', 'error');
       return;
@@ -214,7 +259,7 @@ export default function CartPage() {
               onClick={toggleSelectAll} 
               style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              {cartItems.length > 0 && cartItems.every((_, i) => selectedItems[i]) ? <CheckSquare size={18}/> : <Square size={18}/>}
+              {cartItems.length > 0 && cartItems.every(item => selectedItems[`${item.product}_${item.local || 'Cơ sở 1'}`]) ? <CheckSquare size={18}/> : <Square size={18}/>}
               Chọn tất cả
             </button>
 
@@ -242,20 +287,18 @@ export default function CartPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {Object.entries(groupedByStore).map(([storeId, storeData]) => {
-            const storeItemIndices = storeData.items.map(i => i.originalIndex);
-            const isStoreAllSelected = storeItemIndices.every(idx => selectedItems[idx]);
-            const storeSelectedCount = storeItemIndices.filter(idx => selectedItems[idx]).length;
+            const storeKeys = storeData.items.map(i => i.itemKey);
+            const isStoreAllSelected = storeKeys.every(key => selectedItems[key]);
+            const storeSelectedCount = storeKeys.filter(key => selectedItems[key]).length;
 
             return (
               <div key={storeId} style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                {/* Header nhóm: cố định hiệu ứng hover cho nút và tiêu đề */}
+                {/* Header nhóm */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <button 
-                      onClick={() => toggleSelectStore(storeItemIndices)} 
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', alignItems: 'center', transition: 'transform 0.1s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      onClick={() => toggleSelectStore(storeKeys)} 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', alignItems: 'center' }}
                     >
                       {isStoreAllSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                     </button>
@@ -265,10 +308,8 @@ export default function CartPage() {
 
                   {storeSelectedCount > 0 && (
                     <button 
-                      onClick={() => handleRemoveStoreSelected(storeItemIndices)}
-                      style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background-color 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fecaca'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                      onClick={() => handleRemoveStoreSelected(storeKeys)}
+                      style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <Trash2 size={14} /> Xóa nhóm này ({storeSelectedCount})
                     </button>
@@ -278,16 +319,15 @@ export default function CartPage() {
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {storeData.items.map((item) => {
                     const idx = item.originalIndex;
-                    const isSelected = !!selectedItems[idx];
+                    const itemKey = item.itemKey;
+                    const isSelected = !!selectedItems[itemKey];
                     const productImg = Array.isArray(item.img) ? item.img[0] : (item.img || 'https://via.placeholder.com/70');
 
                     return (
                       <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
                         <button 
-                          onClick={() => toggleSelectItem(idx)} 
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isSelected ? '#2563eb' : '#94a3b8', display: 'flex', alignItems: 'center', transition: 'transform 0.1s' }}
-                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          onClick={() => toggleSelectItem(itemKey)} 
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: isSelected ? '#2563eb' : '#94a3b8', display: 'flex', alignItems: 'center' }}
                         >
                           {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                         </button>
@@ -314,10 +354,8 @@ export default function CartPage() {
 
                         <button 
                           onClick={() => handleRemoveItem(idx)}
-                          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px', transition: 'color 0.2s' }}
+                          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px' }}
                           title="Xóa sản phẩm"
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -349,11 +387,8 @@ export default function CartPage() {
                 fontSize: '15px', 
                 fontWeight: '700', 
                 cursor: selectedCount > 0 ? 'pointer' : 'not-allowed', 
-                boxShadow: selectedCount > 0 ? '0 4px 12px rgba(220, 38, 38, 0.25)' : 'none',
-                transition: 'background-color 0.2s'
+                boxShadow: selectedCount > 0 ? '0 4px 12px rgba(220, 38, 38, 0.25)' : 'none'
               }}
-              onMouseEnter={(e) => { if (selectedCount > 0) e.currentTarget.style.backgroundColor = '#b91c1c'; }}
-              onMouseLeave={(e) => { if (selectedCount > 0) e.currentTarget.style.backgroundColor = '#dc2626'; }}
             >
               Mua Hàng ({selectedCount})
             </button>
