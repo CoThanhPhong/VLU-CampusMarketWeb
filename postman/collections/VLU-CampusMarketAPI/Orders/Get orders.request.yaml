@@ -1,4 +1,0 @@
-$kind: http-request
-url: http://localhost:5000/api/orders/g
-method: GET
-order: 1793888427893

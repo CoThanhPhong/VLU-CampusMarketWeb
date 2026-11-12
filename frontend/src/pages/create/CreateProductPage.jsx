@@ -48,7 +48,7 @@ export default function CreateProductPage() {
       console.warn("Chưa tìm thấy thông tin đăng nhập của người dùng.");
     }
 
-    axios.get('/api/products/g')
+    axios.post('/api/products/g')
       .then((res) => {
         if (res.data.success) {
           const productsList = res.data.data || [];
@@ -166,6 +166,34 @@ export default function CreateProductPage() {
     });
   };
 
+  // HÀM XỬ LÝ XÓA BÀI VIẾT (Đã đồng bộ truyền _id chuẩn xác cho backend)
+  const handleDelete = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+
+    setIsLoading(true);
+    try {
+      // Gọi API xóa sản phẩm khớp với backend deleteProduct (hỗ trợ truyền qua data body hoặc params)
+      const res = await axios.delete(`/api/products/${editProductId}`, { 
+        data: { _id: editProductId },
+        withCredentials: true 
+      });
+
+      if (res.data.success) {
+        alert('Xóa bài viết thành công!');
+        sessionStorage.removeItem('productsCache');
+        window.dispatchEvent(new Event('productsUpdated'));
+        navigate('/home');
+      } else {
+        alert('Không thể xóa sản phẩm: ' + res.data.message);
+      }
+    } catch (err) {
+      console.error('Lỗi khi xóa bài đăng:', err);
+      alert('Xóa thất bại! ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -215,7 +243,7 @@ export default function CreateProductPage() {
       };
 
       if (isEditing) {
-        // Trường hợp đang ở chế độ chỉnh sửa -> Cập nhật trực tiếp sản phẩm theo editProductId
+        // Cập nhật sản phẩm cũ thông qua API backend
         const updatePayload = {
           _id: editProductId,
           ...payloadData
@@ -233,7 +261,6 @@ export default function CreateProductPage() {
         }
 
       } else {
-        // Trường hợp đăng mới / kiểm tra trùng tên sản phẩm
         const foundProduct = existingProducts.find((item) => {
           const itemAuthorId = item.author?._id || item.author?.id || item.author;
           const isSameAuthor = String(itemAuthorId) === String(currentUserId);
@@ -261,6 +288,7 @@ export default function CreateProductPage() {
           }
 
         } else {
+          // Tạo mới bài đăng (backend sẽ tự động đẩy _id vào UserDetail.products[])
           const res = await axios.post('/api/products/c', payloadData);
 
           if (res.data.success) {
@@ -408,10 +436,24 @@ export default function CreateProductPage() {
           <textarea name="description" rows="4" value={formData.description} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
         </div>
 
+        {/* CÁC NÚT HÀNH ĐỘNG */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
           <button type="submit" disabled={isLoading} style={{ flex: 1, padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
             {isLoading ? 'Đang xử lý...' : (isEditing ? 'Lưu Thay Đổi' : 'Xác nhận Đăng tin')}
           </button>
+
+          {/* NÚT XÓA CHỈ HIỆN KHI Ở CHẾ ĐỘ CHỈNH SỬA */}
+          {isEditing && (
+            <button 
+              type="button" 
+              onClick={handleDelete} 
+              disabled={isLoading} 
+              style={{ padding: '10px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: '600' }}
+            >
+              Xóa bài viết
+            </button>
+          )}
+
           <button type="button" onClick={() => navigate('/home')} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
             Hủy bỏ
           </button>

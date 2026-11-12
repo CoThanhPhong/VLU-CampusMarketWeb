@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, MapPin, CalendarDays, Package, UserRound, ShoppingCart, ImageOff, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
 import {getProductDetail, getProductOwnerId, normalizeUser } from "../../services/detailApi"
@@ -11,6 +11,7 @@ const dateText = (value) => value ? new Date(value).toLocaleDateString("vi-VN") 
 
 export default function PostDetail() {
   const { id } = useParams();
+  const location = useLocation()
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
@@ -19,7 +20,6 @@ export default function PostDetail() {
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [authorInfo, setAuthorInfo] = useState({ name: 'Thành viên VLU', avatar: '', id: '#' });
-  const userId = "#"
 
   const deviceLabels = { 
     mobile: 'Điện thoại', 
@@ -64,8 +64,7 @@ export default function PostDetail() {
     const resolveAuthor = async () => {
       if (!product) return;
       const rawAuthor = product.author;
-      resolvedId = getProductOwnerId(product);
-
+      const resolvedId = getProductOwnerId(product);
       if (!rawAuthor) {
         if (alive) setAuthorInfo({ name: 'Thành viên VLU', avatar: '', id: resolvedId || '#' });
         return;
@@ -112,7 +111,7 @@ export default function PostDetail() {
     <div className="detail-state detail-error">
       <h2>Không thể tải bài đăng</h2>
       <p>{error || "Bài đăng không tồn tại hoặc đã bị xóa."}</p>
-      <button className="detail-btn secondary" onClick={() => navigate(-1)}><ArrowLeft size={17}/> Quay lại</button>
+      <button className="detail-btn secondary" onClick={handleGoBack}><ArrowLeft size={17}/> Quay lại</button>
     </div>
   );
 
@@ -189,9 +188,18 @@ export default function PostDetail() {
     navigate('/checkout');
   };
 
+  const handleGoBack = () => {
+    const previousPage = location.state?.fromPage;
+    if (previousPage) {
+      navigate(`/home?page=${previousPage}`); // Quay lại đúng trang (VD: trang 3)
+    } else {
+      navigate(-1); // Quay lại lịch sử thông thường nếu không có state
+    }
+  };
+
   return (
     <section className="detail-page">
-      <button className="back-link" onClick={() => navigate(-1)}><ArrowLeft size={16}/> Quay lại</button>
+      <button className="back-link" onClick={handleGoBack}><ArrowLeft size={16}/> Quay lại</button>
       
       <div className="post-detail-grid">
         
@@ -280,7 +288,7 @@ export default function PostDetail() {
 
             {/* Thông tin tác giả nằm ngay dưới phần địa điểm */}
             <div 
-              onClick={() => { if (authorInfo.id && authorInfo.id !== '#') navigate(`/user/${authorInfo.id}`); }}
+              onClick={() => { if (authorInfo.id && authorInfo.id !== '#') navigate(`/user/${authorInfo.name}`, { state: { id: authorInfo.id }}); }}
               className="fact-item"
               style={{ gridColumn: 'span 2', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'background 0.2s' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}

@@ -135,8 +135,9 @@ const Header = ({ isOpen, setIsOpen }) => {
             />
           </svg>
         </button>
-        <Link className="logo" to="/">
-          VLU Campus Market
+        <Link className="logo" to="/" style={{display:"flex", alignItems:"center"}}>
+          <img src="../../images/logo.png" style={{width: "30px", height:"30px", objectFit:"cover", marginRight:"10px"}} />
+          VLU Market
         </Link>
       </div>
 

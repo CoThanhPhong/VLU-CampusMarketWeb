@@ -1,6 +1,0 @@
-$kind: http-request
-url: http://localhost:5000/api/auth/profile
-method: GET
-auth:
-  type: noauth
-order: 2275129809700300

@@ -1,7 +1,0 @@
-$kind: http-request
-url: http://localhost:5000/api/products/g
-method: GET
-body:
-  type: json
-  content: '{"_id":"6ace1ce784295359649d418a"}'
-order: 1793627649916

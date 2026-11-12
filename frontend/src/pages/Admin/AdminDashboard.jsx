@@ -612,7 +612,7 @@ export default function AdminDashboard() {
                               <input type="checkbox" checked={isSelected} onChange={() => handleSelectUser(user._id)} style={{ cursor: 'pointer' }} />
                             )}
                           </td>
-                          <td style={{ padding: '12px 16px', fontWeight: '600', color: '#0f172a', cursor: 'pointer' }} onClick={() => navigate(`/user/${user._id}`)}>
+                          <td style={{ padding: '12px 16px', fontWeight: '600', color: '#0f172a', cursor: 'pointer' }} onClick={() => navigate(`/user/${user.profile?.name || user.name}`, {state: {id: user._id}})}>
                             {user.profile?.name || user.name || 'Thành viên'} {isSelf && <span style={{ color: '#2563eb', fontSize: '11px', fontWeight: 'normal' }}>(Tài khoản của bạn)</span>}
                           </td>
                           <td style={{ padding: '12px 16px', color: '#475569' }}>{user.email}</td>

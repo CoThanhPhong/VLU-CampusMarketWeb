@@ -71,7 +71,7 @@ const UserMenu = () => {
           className="user-dropdown-item" 
           onClick={() => {
             if (userInfo.id) {
-              navigate(`/user/${userInfo.id}`);
+              navigate(`/user/me`, {state: {id: userInfo.id}});
             } else {
               console.warn("Không tìm thấy ID người dùng!");
             }

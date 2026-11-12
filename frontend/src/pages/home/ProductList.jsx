@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from "../../components/Route/ProductCard";
 
 export default function ProductList() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // 1. Đọc số trang từ URL (mặc định là 1 nếu không có)
+  const pageFromUrl = parseInt(searchParams.get("page")) || 1;
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -10,10 +16,18 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocal, setSelectedLocal] = useState('all');
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(pageFromUrl);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const limit = 20;
+
+  // 2. Lắng nghe sự thay đổi của URL query parameters (hỗ trợ khi bấm nút Quay lại từ trang chi tiết)
+  useEffect(() => {
+    const urlPage = parseInt(searchParams.get("page")) || 1;
+    if (urlPage !== currentPage) {
+      setCurrentPage(urlPage);
+    }
+  }, [searchParams]);
 
   // Sửa từ 'category' thành 'deviceType' để khớp với Model database và Backend
   const fetchProducts = (page = 1, search = '', category = 'all', local = 'all') => {
@@ -27,7 +41,7 @@ export default function ProductList() {
       .then((res) => {
         if (res.data.success) {
           setProducts(res.data.data || []);
-          setCurrentPage(res.data.currentPage || 1);
+          setCurrentPage(res.data.currentPage || page);
           setTotalPages(res.data.totalPages || 1);
           setTotalProducts(res.data.totalProducts || 0);
         }
@@ -52,16 +66,19 @@ export default function ProductList() {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
+    setSearchParams({ page: 1 });
   };
 
   const handleCategoryChange = (catId) => {
     setSelectedCategory(catId);
     setCurrentPage(1);
+    setSearchParams({ page: 1 });
   };
 
   const handleLocalChange = (e) => {
     setSelectedLocal(e.target.value);
     setCurrentPage(1);
+    setSearchParams({ page: 1 });
   };
 
   const getPageNumbers = () => {
@@ -87,8 +104,10 @@ export default function ProductList() {
     return rangeWithDots;
   };
 
+  // 3. Cập nhật state đồng thời đẩy số trang lên URL query params
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    setSearchParams({ page: page }); // Cập nhật URL thành ?page=X
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -171,7 +190,7 @@ export default function ProductList() {
             display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px'
           }}>
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product._id} product={product} currentPage={currentPage}/>
             ))}
           </div>
 

@@ -4,7 +4,7 @@ import { Pencil, Check, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import '../../css/CustomModal.css';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, currentPage }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1); // State quản lý số lượng mua trực tiếp trên card
   
@@ -14,6 +14,9 @@ export default function ProductCard({ product }) {
 
   const [addedEffect, setAddedEffect] = useState(false);
   const [notification, setNotification] = useState(null);
+
+  // State quản lý lỗi ảnh để hiển thị ảnh thay thế
+  const [imgError, setImgError] = useState(false);
 
   const showToast = (msg, type = 'error') => {
     setNotification({ msg, type });
@@ -43,6 +46,8 @@ export default function ProductCard({ product }) {
   }, []);
 
   const getProductImage = () => {
+    if (imgError) return 'https://thumbs.dreamstime.com/b/simple-icon-representing-image-error-not-found-status-symbolized-crossed-out-sign-error-image-icon-file-not-441872059.jpg';
+
     if (Array.isArray(product?.img) && product.img.length > 0) {
       const firstValidImg = product.img.find(img => typeof img === 'string' && img.trim() !== '');
       if (firstValidImg) return firstValidImg;
@@ -165,10 +170,11 @@ export default function ProductCard({ product }) {
     sessionStorage.setItem('checkoutItems', JSON.stringify(buyNowItem));
     navigate('/checkout');
   };
+  console.log(currentPage)
 
   return (
     <div 
-      onClick={() => currentUserId != authorId?navigate(`/product/${product?._id}`): navigate(`/create-post?edit=${product._id}`)}
+      onClick={() => currentUserId != authorId ? navigate(`/product/${product?._id}`, {state: {fromPage: currentPage}}) : navigate(`/create-post?edit=${product._id}`)}
       style={{ backgroundColor: '#ffffff', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'transform 0.2s, box-shadow 0.2s' }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';
@@ -190,7 +196,12 @@ export default function ProductCard({ product }) {
       <div>
         {/* Hình ảnh và nhãn trạng thái */}
         <div style={{ position: 'relative', width: '100%', height: '170px', backgroundColor: '#f1f5f9' }}>
-          <img src={getProductImage()} alt={product?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img 
+            src={getProductImage()} 
+            alt={product?.name} 
+            onError={() => setImgError(true)} // Tự động bật trạng thái lỗi ảnh khi load thất bại
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
           
           <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#334155', color: '#fff', fontSize: '11px', fontWeight: '600', padding: '4px 8px', borderRadius: '4px' }}>
             {deviceLabels[product?.deviceType] || product?.deviceType || 'Sản phẩm'}

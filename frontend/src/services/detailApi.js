@@ -39,7 +39,13 @@ export async function getProductDetail(productId) {
   // Sửa lại gọi đúng endpoint chi tiết theo ID của MongoDB: /products/g/{id}
   // Hoặc lọc chuẩn xác trong mảng trả về nếu backend dùng chung endpoint liệt kê
   try {
-    const result = await request(`/products/g/${productId}`);
+    const result = await request('/products/g', {
+    method: 'POST', // hoặc phương thức tương ứng (PUT/PATCH tùy route của bạn)
+    body: JSON.stringify({ _id: productId }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
     const product = result.data || result;
     if (product) return product;
   } catch (err) {

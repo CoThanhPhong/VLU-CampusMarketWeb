@@ -66,7 +66,7 @@ const getUserById = async (req, res) => {
       });
     }
 
-    const user = await User.findById(id).populate('profile');
+    const user = await User.findById(id).select('-password').populate('profile');
 
     if (!user) {
       return res.status(404).json({ 
@@ -77,7 +77,7 @@ const getUserById = async (req, res) => {
 
     return res.status(200).json({ 
       success: true, 
-      data: user 
+      data: user
     });
   } catch (error) {
     console.error('Lỗi lấy thông tin user theo ID:', error.message);
@@ -92,7 +92,7 @@ const getUserById = async (req, res) => {
 const updateCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, phone, bio, avatar } = req.body;
+    const { name, phone, bio, avatar, cart, products } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -104,6 +104,8 @@ const updateCurrentUser = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar !== undefined) updateData.avatar = avatar;
+    if (cart !== undefined) updateData.cart = cart;
+    if (products !== undefined) updateData.products = products;
 
     let updatedProfile;
     if (user.profile) {

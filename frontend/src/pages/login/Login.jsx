@@ -41,7 +41,7 @@ const Login = () => {
 
       // Chuyển hướng về trang chủ sau khi đăng nhập thành công
       sessionStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/home');
+      data.user.role == "admin"? navigate('/admin'):navigate('/home');
     } catch (err) {
       setError(err.message);
     } finally {

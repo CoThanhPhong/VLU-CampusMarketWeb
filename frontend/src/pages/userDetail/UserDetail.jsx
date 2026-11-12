@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Package, CalendarDays, UserRound, Mail, Phone, GraduationCap, Search, Pencil } from "lucide-react";
-import { getProducts, getProductOwnerId } from "../../services/detailApi";
 import ProductCard from "../../components/Route/ProductCard";
 import axios from "axios";
 import "../../css/Profile.css";
 
 export default function UserDetail() {
-  const { id } = useParams();
+  const location = useLocation();
+  const { id } = location.state || {};
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -39,7 +39,7 @@ export default function UserDetail() {
     return String(currentUserId) === String(id);
   }, [currentUserId, id]);
 
-  // 3. Tối ưu: Nếu là current user thì lấy từ session luôn, ngược lại mới gọi API
+  // 3. Tải thông tin người dùng và danh sách sản phẩm dựa trên mảng ID `products`
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -57,7 +57,7 @@ export default function UserDetail() {
           }
         }
 
-        // Nếu không phải current user hoặc trong storage không có, tiến hành gọi API
+        // Nếu không phải current user hoặc trong storage không có, tiến hành gọi API user
         if (!rawUser) {
           const userResponse = await axios.post("/api/auth/user", { id });
           const responseData = userResponse.data;
@@ -76,24 +76,37 @@ export default function UserDetail() {
           phone: rawUser.phone || "",
           bio: rawUser.bio || "",
           avatar: rawUser.avatar || "",
-          createdAt: rawUser.createdAt
+          createdAt: rawUser.createdAt,
+          products: rawUser.products || [] // Mảng chứa các chuỗi ID sản phẩm
         };
 
         setUser(normalized);
 
-        // Lấy danh sách sản phẩm của user này và sắp xếp mới nhất lên đầu
-        const allProducts = await getProducts();
+        // Lấy toàn bộ danh sách sản phẩm từ hệ thống để map với mảng ID của user
+        const productRes = await axios.get("/api/products/g?getAll=true");
         if (!alive) return;
-        
-        const userProducts = allProducts
-          .filter((item) => getProductOwnerId(item) === String(id))
-          .sort((a, b) => {
-            const dateA = new Date(a.createdAt || a.startDate || 0);
-            const dateB = new Date(b.createdAt || b.startDate || 0);
-            return dateB - dateA; // Bài viết mới nhất sẽ đứng đầu danh sách
-          });
 
-        setProducts(userProducts);
+        const responseData = productRes.data;
+        const allProducts = Array.isArray(responseData)
+          ? responseData 
+          : (responseData?.data || responseData?.products || []);
+
+        // Lọc ra các sản phẩm có _id / id nằm trong mảng `products` của user (ép kiểu chuỗi an toàn)
+        const userProducts = allProducts.filter(item => {
+          const itemId = String(item._id || item.id || "");
+          return normalized.products.some(prodId => String(prodId) === itemId);
+        });
+
+        // Sắp xếp bài viết mới nhất lên đầu
+        const sortedProducts = userProducts.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.startDate || 0);
+          const dateB = new Date(b.createdAt || b.startDate || 0);
+          return dateB - dateA;
+        });
+
+        if (alive) {
+          setProducts(sortedProducts);
+        }
 
       } catch (err) {
         if (alive) {
@@ -106,12 +119,26 @@ export default function UserDetail() {
       }
     };
 
-    fetchUserData();
+    if (id) {
+      fetchUserData();
+    } else {
+      setError("Không tìm thấy ID người dùng.");
+      setLoading(false);
+    }
 
     return () => { 
       alive = false; 
     };
   }, [id, isCurrentUser]);
+
+  const handleGoBack = () => {
+    const previousPage = location.state?.fromPage;
+    if (previousPage) {
+      navigate(`/home?page=${previousPage}`); // Quay lại đúng trang (VD: trang 3)
+    } else {
+      navigate(-1); // Quay lại lịch sử thông thường nếu không có state
+    }
+  };
 
   const filteredProducts = useMemo(() => products.filter((item) =>
     String(item.name || "").toLowerCase().includes(query.toLowerCase())
@@ -121,13 +148,13 @@ export default function UserDetail() {
   if (error || !user) return (
     <div className="detail-state detail-error">
       <h2>Không thể tải hồ sơ</h2><p>{error || "Không tìm thấy người dùng."}</p>
-      <button className="detail-btn secondary" onClick={() => navigate(-1)}><ArrowLeft size={17}/>Quay lại</button>
+      <button className="detail-btn secondary" onClick={handleGoBack}><ArrowLeft size={17}/>Quay lại</button>
     </div>
   );
 
   return (
     <section className="detail-page user-detail-page">
-      <button className="back-link" onClick={() => navigate(-1)}><ArrowLeft size={17}/>Quay lại</button>
+      <button className="back-link" onClick={handleGoBack}><ArrowLeft size={17}/>Quay lại</button>
       
       {/* Khung profile chính */}
       <div className="profile-cover card-surface" style={{ position: "relative" }}>
