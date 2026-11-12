@@ -168,7 +168,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div 
-      onClick={() => navigate(`/product/${product?._id}`)}
+      onClick={() => currentUserId != authorId?navigate(`/product/${product?._id}`): navigate(`/create-post?edit=${product._id}`)}
       style={{ backgroundColor: '#ffffff', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'transform 0.2s, box-shadow 0.2s' }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-2px)';

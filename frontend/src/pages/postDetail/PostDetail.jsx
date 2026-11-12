@@ -19,6 +19,7 @@ export default function PostDetail() {
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [authorInfo, setAuthorInfo] = useState({ name: 'Thành viên VLU', avatar: '', id: '#' });
+  const userId = "#"
 
   const deviceLabels = { 
     mobile: 'Điện thoại', 
@@ -63,7 +64,7 @@ export default function PostDetail() {
     const resolveAuthor = async () => {
       if (!product) return;
       const rawAuthor = product.author;
-      const resolvedId = getProductOwnerId(product);
+      resolvedId = getProductOwnerId(product);
 
       if (!rawAuthor) {
         if (alive) setAuthorInfo({ name: 'Thành viên VLU', avatar: '', id: resolvedId || '#' });

@@ -14,7 +14,7 @@ const UserMenu = () => {
   // Lấy thông tin user từ localStorage hoặc sessionStorage khi component mount
   useEffect(() => {
     try {
-      const storedUser = sessionStorage.getItem('user');
+      const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
 
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
