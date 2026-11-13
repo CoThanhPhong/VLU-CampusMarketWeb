@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # 1. Backend Node.js / Express API kết nối trực tiếp MongoDB Atlas
+  backend:
+    build: ./backend
+    container_name: app_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb+srv://dev:VLUCampusMarketDev@vlu-campusmarket.9xdnirr.mongodb.net/CampusMarket_db?appName=VLU-CampusMarket
+
+  # 2. Frontend React / Vite (Dùng Nginx phục vụ file tĩnh siêu mượt)
+  frontend:
+    build: ./frontend
+    container_name: app_frontend
+    restart: always
+    ports:
+      - "5001:80"
+    depends_on:
+      - backend
