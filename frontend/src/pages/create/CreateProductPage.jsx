@@ -128,6 +128,24 @@ export default function CreateProductPage() {
     setFormData({ ...formData, imgInputs: newInputs });
   };
 
+  const getImagePreview = (imgItem) => {
+    if (!imgItem || !imgItem.value || typeof imgItem.value !== 'string') return null;
+
+    const trimmedValue = imgItem.value.trim();
+    if (!trimmedValue) return null;
+
+    if (trimmedValue.startsWith('data:image') || trimmedValue.startsWith('blob:')) {
+      return trimmedValue;
+    }
+
+    try {
+      const parsedUrl = new URL(trimmedValue);
+      return ['http:', 'https:'].includes(parsedUrl.protocol) ? trimmedValue : null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleImageFileUpload = (index, e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -371,46 +389,64 @@ export default function CreateProductPage() {
           </label>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {formData.imgInputs.map((imgItem, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                
-                <select 
-                  value={imgItem.type} 
-                  onChange={(e) => handleImageTypeChange(index, e.target.value)}
-                  style={{ padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', backgroundColor: '#f8fafc', outline: 'none' }}
-                >
-                  <option value="url">Link URL</option>
-                  <option value="file">Tải File</option>
-                </select>
+            {formData.imgInputs.map((imgItem, index) => {
+              const previewUrl = getImagePreview(imgItem);
 
-                {imgItem.type === 'url' ? (
-                  <input 
-                    type="url" 
-                    value={imgItem.value} 
-                    onChange={(e) => handleImageValueChange(index, e.target.value)} 
-                    placeholder={`Nhập đường dẫn ảnh ${index + 1} (https://...)`} 
-                    style={{ flex: 1, padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} 
-                  />
-                ) : (
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={(e) => handleImageFileUpload(index, e)} 
-                    style={{ flex: 1, fontSize: '12px' }} 
-                  />
-                )}
+              return (
+                <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <select 
+                      value={imgItem.type} 
+                      onChange={(e) => handleImageTypeChange(index, e.target.value)}
+                      style={{ padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', backgroundColor: '#f8fafc', outline: 'none' }}
+                    >
+                      <option value="url">Link URL</option>
+                      <option value="file">Tải File</option>
+                    </select>
 
-                {formData.imgInputs.length > 1 && (
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveImageField(index)}
-                    style={{ padding: '6px 10px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
-                  >
-                    Xóa
-                  </button>
-                )}
-              </div>
-            ))}
+                    {imgItem.type === 'url' ? (
+                      <input 
+                        type="url" 
+                        value={imgItem.value} 
+                        onChange={(e) => handleImageValueChange(index, e.target.value)} 
+                        placeholder={`Nhập đường dẫn ảnh ${index + 1} (https://...)`} 
+                        style={{ flex: 1, padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} 
+                      />
+                    ) : (
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handleImageFileUpload(index, e)} 
+                        style={{ flex: 1, fontSize: '12px' }} 
+                      />
+                    )}
+
+                    {formData.imgInputs.length > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveImageField(index)}
+                        style={{ padding: '6px 10px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+
+                  {previewUrl && (
+                    <div style={{ width: '100%', borderRadius: '6px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                      <img
+                        src={previewUrl}
+                        alt={`Preview ảnh ${index + 1}`}
+                        style={{ display: 'block', width: '100%', maxHeight: '170px', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {formData.imgInputs.length < 5 && (
               <button 
