@@ -11,7 +11,24 @@ const getItemSellerId = (item) => {
   return author.toString();
 };
 
+const calculateOrderTotal = (orderItems, includeRejected = false) => orderItems.reduce((total, item) => {
+  if (!includeRejected && item.status === 'Đã từ chối') return total;
+  return total + (Number(item.price) * Number(item.quantity));
+}, 0);
+
+const syncOrderPrices = (order) => {
+  const originalTotalPrice = order.originalTotalPrice ?? calculateOrderTotal(order.orderItems, true);
+  const totalPrice = calculateOrderTotal(order.orderItems);
+  const changed = order.originalTotalPrice !== originalTotalPrice || order.totalPrice !== totalPrice;
+
+  order.originalTotalPrice = originalTotalPrice;
+  order.totalPrice = totalPrice;
+  return changed;
+};
+
 const updateOrderStatus = (order) => {
+  syncOrderPrices(order);
+
   const allItemsRejected = order.orderItems.every(item => item.status === 'Đã từ chối');
   const allItemsConfirmed = order.orderItems.every(item => item.status === 'Đã xác nhận');
   const allItemsProcessed = order.orderItems.every(item => (
@@ -45,7 +62,7 @@ const restoreRejectedItemStock = async (item) => {
 // 1. Tạo đơn hàng mới (Dùng cho trang Checkout)
 exports.createOrder = async (req, res) => {
   try {
-    const { orderItems, shippingInfo, paymentMethod, totalPrice } = req.body;
+    const { orderItems, shippingInfo, paymentMethod } = req.body;
     const userId = req.user.id; // Lấy từ middleware xác thực (Auth)
 
     if (!orderItems || orderItems.length === 0) {
@@ -76,7 +93,8 @@ exports.createOrder = async (req, res) => {
       orderItems,
       shippingInfo,
       paymentMethod,
-      totalPrice,
+      totalPrice: calculateOrderTotal(orderItems),
+      originalTotalPrice: calculateOrderTotal(orderItems, true),
       isPaid: paymentMethod !== 'COD',
       paidAt: paymentMethod !== 'COD' ? Date.now() : null
     });
@@ -105,6 +123,10 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({ user: userId })
       .populate('orderItems.product', 'name img deviceType')
       .sort({ createdAt: -1 });
+
+    for (const order of orders) {
+      if (syncOrderPrices(order)) await order.save();
+    }
 
     return res.status(200).json({ 
       success: true, 

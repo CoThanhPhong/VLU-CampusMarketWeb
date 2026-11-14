@@ -53,6 +53,9 @@ const OrderSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
+  originalTotalPrice: {
+    type: Number
+  },
   orderStatus: {
     type: String,
     enum: ["Chờ xác nhận", "Đã xác nhận", "Đã hủy", "Đã từ chối"],

@@ -114,6 +114,15 @@ export default function OrderListPage() {
         </div>
       ) : (
         orders.map(order => {
+          const hasRejectedItems = order.orderItems.some(item => item.status === 'Đã từ chối');
+          const originalTotalPrice = order.originalTotalPrice ?? order.orderItems.reduce(
+            (total, item) => total + item.price * item.quantity,
+            0
+          );
+          const currentTotalPrice = order.totalPrice ?? order.orderItems.reduce(
+            (total, item) => total + (item.status === 'Đã từ chối' ? 0 : item.price * item.quantity),
+            0
+          );
           let badgeBg = '#fff3cd'; 
           let badgeColor = '#856404';
           if (order.orderStatus === 'Đã hủy') {
@@ -162,6 +171,7 @@ export default function OrderListPage() {
                   const isItemConfirmed = item.isPaid === true || item.status === 'Đã xác nhận';
                   const isItemRejected = item.status === 'Đã từ chối';
                   const productImg = Array.isArray(item.product?.img) ? item.product.img[0] : (item.product?.img || item.img || 'https://via.placeholder.com/60');
+                  const itemTotal = item.price * item.quantity;
                   
                   return (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '10px 0', borderBottom: '1px solid #f1f1f1' }}>
@@ -178,14 +188,29 @@ export default function OrderListPage() {
                           {order.orderStatus === 'Đã hủy' ? 'Đã hủy' : isItemRejected ? 'Người bán đã từ chối' : isItemConfirmed ? '✓ Người bán đã xác nhận' : '⏳ Chờ người bán xác nhận'}
                         </div>
                       </div>
-                      <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>{(item.price * item.quantity).toLocaleString()} VNĐ</span>
+                      <span style={{ fontWeight: 'bold', color: isItemRejected ? '#888' : '#e74c3c', textAlign: 'right' }}>
+                        {isItemRejected ? (
+                          <>
+                            <span style={{ textDecoration: 'line-through' }}>{itemTotal.toLocaleString()} VNĐ</span>
+                            <span style={{ display: 'block', fontSize: '11px', fontWeight: 'normal' }}>Không tính vào tổng</span>
+                          </>
+                        ) : `${itemTotal.toLocaleString()} VNĐ`}
+                      </span>
                     </div>
                   );
                 })}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                <h3 style={{ margin: 0 }}>Tổng tiền: <span style={{ color: '#e74c3c' }}>{order.totalPrice?.toLocaleString()} VNĐ</span></h3>
+                <h3 style={{ margin: 0 }}>
+                  Tổng tiền:{' '}
+                  {hasRejectedItems && (
+                    <span style={{ color: '#888', fontSize: '15px', fontWeight: 'normal', textDecoration: 'line-through', marginRight: '8px' }}>
+                      {originalTotalPrice.toLocaleString()} VNĐ
+                    </span>
+                  )}
+                  <span style={{ color: '#e74c3c' }}>{currentTotalPrice.toLocaleString()} VNĐ</span>
+                </h3>
                 {order.orderStatus === 'Chờ xác nhận' && (
                   <button 
                     onClick={() => handleCancelOrder(order._id)}
