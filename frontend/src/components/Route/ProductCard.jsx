@@ -230,7 +230,7 @@ export default function ProductCard({ product, currentPage }) {
             onClick={(e) => { 
               e.stopPropagation(); 
               if (authorId === '#') showToast('Bài viết cũ chưa có dữ liệu người đăng!');
-              else navigate(`/user/${authorId}`, {state: {id: authorId}}); 
+              else navigate(`/user/${authorName}`, { state: { id: authorId }}) 
             }}
             style={{ fontSize: '13px', color: '#2563eb', cursor: 'pointer', marginBottom: '8px' }}
           >
