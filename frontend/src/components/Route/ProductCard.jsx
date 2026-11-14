@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Pencil, Check, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import '../../css/CustomModal.css';
 
 export default function ProductCard({ product, currentPage }) {
   const navigate = useNavigate();
+  const location = useLocation()
   const [qty, setQty] = useState(1); // State quản lý số lượng mua trực tiếp trên card
   
   const [authorName, setAuthorName] = useState('Đang tải...');
-  const [authorId, setAuthorId] = useState('#');
+  const authorId = location.state.id || "";
   const [currentUserId, setCurrentUserId] = useState(null);
 
   const [addedEffect, setAddedEffect] = useState(false);
