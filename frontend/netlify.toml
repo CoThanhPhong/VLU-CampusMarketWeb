@@ -1,0 +1,17 @@
+[build]
+  command = "vite build"
+  publish = "dist"
+
+# Proxy API calls to the Render backend so requests are same-origin
+# (avoids CORS errors and lets the auth cookie work).
+[[redirects]]
+  from = "/api/*"
+  to = "https://vlu-campusmarketweb.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# React Router SPA fallback (prevents 404 on refresh / deep links)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
