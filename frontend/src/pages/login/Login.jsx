@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE } from '../../services/apiConfig';
 import '../../css/Login.css';
 
 const Login = () => {
@@ -17,7 +18,7 @@ const Login = () => {
 
     try {
       // Gọi API đăng nhập tới Backend
-      const response = await fetch('api/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+import { API_BASE } from "./apiConfig";
 
 function readToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token") || "";
