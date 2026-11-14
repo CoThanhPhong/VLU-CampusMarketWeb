@@ -92,6 +92,37 @@ export default function SellerPage() {
     });
   };
 
+  const handleReject = (orderId, itemId = null) => {
+    const isWholeOrder = itemId === null;
+    const loadingKey = isWholeOrder ? `order-${orderId}` : itemId;
+    setConfirmModal({
+      isOpen: true,
+      title: isWholeOrder ? 'Từ chối đơn hàng' : 'Từ chối sản phẩm',
+      message: isWholeOrder
+        ? 'Bạn có chắc chắn muốn từ chối tất cả sản phẩm của mình trong đơn hàng này không?'
+        : 'Bạn có chắc chắn muốn từ chối sản phẩm này không?',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          setBtnLoading(loadingKey);
+          const endpoint = isWholeOrder ? '/api/orders/reject' : '/api/orders/reject-item';
+          const payload = isWholeOrder ? { orderId } : { orderId, itemId };
+          const res = await axios.put(endpoint, payload, { withCredentials: true });
+
+          if (res.data.success) {
+            setOrders(prev => prev.map(ord => ord._id === orderId ? res.data.data : ord));
+            window.dispatchEvent(new Event('orderUpdated'));
+            showToast(isWholeOrder ? 'Đã từ chối đơn hàng.' : 'Đã từ chối sản phẩm.', 'success');
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Không thể từ chối lúc này.', 'error');
+        } finally {
+          setBtnLoading(null);
+        }
+      }
+    });
+  };
+
   const pendingCount = orders.filter(ord => {
     // Bỏ qua đơn hàng đã bị hủy
     if (ord.orderStatus === 'Đã hủy') return false;
@@ -102,7 +133,7 @@ export default function SellerPage() {
       const authorId = typeof authorField === 'object' ? authorField?._id : authorField;
       
       const isMyProduct = !currentSellerId || String(authorId) === String(currentSellerId);
-      const isNotPaid = !(item.isPaid === true || item.status === 'Đã xác nhận');
+      const isNotPaid = item.status === 'Chờ xác nhận' && !(item.isPaid === true || item.status === 'Đã xác nhận');
 
       return isMyProduct && isNotPaid;
     });
@@ -144,8 +175,19 @@ export default function SellerPage() {
 
             if (filteredItems.length === 0) return null;
 
-            const sellerTotalIncome = filteredItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const sellerTotalIncome = filteredItems.reduce((sum, item) => (
+              item.status === 'Đã từ chối' || item.status === 'Đã hủy'
+                ? sum
+                : sum + (item.price * item.quantity)
+            ), 0);
             const isAllSellerItemsPaid = filteredItems.every(item => item.isPaid === true || item.status === 'Đã xác nhận');
+            const areAllSellerItemsRejected = filteredItems.every(item => item.status === 'Đã từ chối');
+            const areAllSellerItemsProcessed = filteredItems.every(item => (
+              item.status === 'Đã từ chối' || item.status === 'Đã xác nhận'
+            ));
+            const canRejectSellerItems = filteredItems.every(item => (
+              item.status === 'Chờ xác nhận' || item.status === 'Đã từ chối'
+            ));
 
             return (
               <div key={order._id} className="order-card">
@@ -161,14 +203,20 @@ export default function SellerPage() {
                   <span className={`status-badge ${
                     order.orderStatus === 'Đã hủy' 
                       ? 'cancelled' 
-                      : isAllSellerItemsPaid 
+                      : areAllSellerItemsRejected
+                      ? 'cancelled'
+                      : areAllSellerItemsProcessed
                       ? 'paid' 
                       : 'pending'
                   }`}>
                     {order.orderStatus === 'Đã hủy' ? (
                       <><XCircle size={14} /> Người mua đã hủy</>
+                    ) : areAllSellerItemsRejected ? (
+                      <><XCircle size={14} /> Đã từ chối</>
                     ) : isAllSellerItemsPaid ? (
                       <><CheckCircle size={14} /> Đã xác nhận</>
+                    ) : areAllSellerItemsProcessed ? (
+                      <><CheckCircle size={14} /> Đã xử lý</>
                     ) : (
                       <><Clock size={14} /> Chờ người bán xác nhận</>
                     )}
@@ -188,6 +236,7 @@ export default function SellerPage() {
                     {filteredItems.map((item, idx) => {
                       const itemId = item._id || item.product?._id;
                       const isItemPaid = item.isPaid === true || item.status === 'Đã xác nhận';
+                      const isItemRejected = item.status === 'Đã từ chối';
 
                       return (
                         <div key={idx} className="product-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #eee' }}>
@@ -211,20 +260,34 @@ export default function SellerPage() {
 
                             {order.orderStatus === 'Đã hủy' ? (
                               <span style={{ fontSize: '12px', color: '#ef4444' }}>Đã hủy</span>
+                            ) : isItemRejected ? (
+                              <span style={{ fontSize: '12px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <XCircle size={14} /> Đã từ chối
+                              </span>
                             ) : isItemPaid ? (
                               <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <CheckCircle size={14} /> Đã xác nhận
                               </span>
                             ) : (
-                              <button
-                                onClick={() => handleConfirmItemPayment(order._id, itemId)}
-                                disabled={btnLoading === itemId || btnLoading === order._id}
-                                className="btn-confirm-payment"
-                                style={{ padding: '6px 12px', fontSize: '12px' }}
-                              >
-                                <DollarSign size={14} />
-                                {btnLoading === itemId ? 'Đang xử lý...' : 'Xác Nhận'}
-                              </button>
+                              <div className="seller-item-actions">
+                                <button
+                                  onClick={() => handleConfirmItemPayment(order._id, itemId)}
+                                  disabled={btnLoading === itemId || btnLoading === order._id || btnLoading === `order-${order._id}`}
+                                  className="btn-confirm-payment"
+                                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                                >
+                                  <DollarSign size={14} />
+                                  {btnLoading === itemId ? 'Đang xử lý...' : 'Xác Nhận'}
+                                </button>
+                                <button
+                                  onClick={() => handleReject(order._id, itemId)}
+                                  disabled={btnLoading === itemId || btnLoading === order._id || btnLoading === `order-${order._id}`}
+                                  className="btn-reject-order"
+                                >
+                                  <XCircle size={14} />
+                                  {btnLoading === itemId ? 'Đang xử lý...' : 'Từ chối'}
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -238,6 +301,16 @@ export default function SellerPage() {
                     <span className="total-price-label">Tổng thu nhập (sản phẩm của bạn):</span>
                     <span className="total-price-amount">{sellerTotalIncome.toLocaleString('vi-VN')} VNĐ</span>
                   </div>
+                  {!areAllSellerItemsRejected && !isAllSellerItemsPaid && canRejectSellerItems && order.orderStatus !== 'Đã hủy' && (
+                    <button
+                      onClick={() => handleReject(order._id)}
+                      disabled={btnLoading === `order-${order._id}` || btnLoading === order._id}
+                      className="btn-reject-order"
+                    >
+                      <XCircle size={14} />
+                      {btnLoading === `order-${order._id}` ? 'Đang xử lý...' : 'Từ chối đơn'}
+                    </button>
+                  )}
                 </div>
               </div>
             );

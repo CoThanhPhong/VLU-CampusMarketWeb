@@ -119,6 +119,9 @@ export default function OrderListPage() {
           if (order.orderStatus === 'Đã hủy') {
             badgeBg = '#f8d7da';
             badgeColor = '#721c24';
+          } else if (order.orderStatus === 'Đã từ chối') {
+            badgeBg = '#f8d7da';
+            badgeColor = '#721c24';
           } else if (order.orderStatus === 'Đã xác nhận' || order.isPaid) {
             badgeBg = '#d4edda';
             badgeColor = '#155724';
@@ -142,7 +145,7 @@ export default function OrderListPage() {
                   alignItems: 'center',
                   gap: '4px'
                 }}>
-                  {order.orderStatus === 'Đã hủy' ? <XCircle size={14} /> : null}
+                  {order.orderStatus === 'Đã hủy' || order.orderStatus === 'Đã từ chối' ? <XCircle size={14} /> : null}
                   {order.orderStatus}
                 </span>
               </div>
@@ -157,6 +160,7 @@ export default function OrderListPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {order.orderItems.map((item, idx) => {
                   const isItemConfirmed = item.isPaid === true || item.status === 'Đã xác nhận';
+                  const isItemRejected = item.status === 'Đã từ chối';
                   const productImg = Array.isArray(item.product?.img) ? item.product.img[0] : (item.product?.img || item.img || 'https://via.placeholder.com/60');
                   
                   return (
@@ -170,8 +174,8 @@ export default function OrderListPage() {
                         <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#333' }}>{item.product?.name || item.name}</p>
                         <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>Số lượng: {item.quantity} | Cơ sở: {item.local}</p>
                         
-                        <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 'bold', color: isItemConfirmed ? '#16a34a' : '#d97706' }}>
-                          {order.orderStatus === 'Đã hủy' ? 'Đã hủy' : isItemConfirmed ? '✓ Người bán đã xác nhận' : '⏳ Chờ người bán xác nhận'}
+                        <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 'bold', color: isItemRejected || order.orderStatus === 'Đã hủy' ? '#dc2626' : isItemConfirmed ? '#16a34a' : '#d97706' }}>
+                          {order.orderStatus === 'Đã hủy' ? 'Đã hủy' : isItemRejected ? 'Người bán đã từ chối' : isItemConfirmed ? '✓ Người bán đã xác nhận' : '⏳ Chờ người bán xác nhận'}
                         </div>
                       </div>
                       <span style={{ fontWeight: 'bold', color: '#e74c3c' }}>{(item.price * item.quantity).toLocaleString()} VNĐ</span>

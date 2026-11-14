@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import UserMenu from "../userMenu/UserMenu";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
+import logo from "../../../images/logo.png";
 
 const Header = ({ isOpen, setIsOpen }) => {
   const [uniqueItemCount, setUniqueItemCount] = useState(0);
@@ -136,7 +137,7 @@ const Header = ({ isOpen, setIsOpen }) => {
           </svg>
         </button>
         <Link className="logo" to="/" style={{display:"flex", alignItems:"center"}}>
-          <img src="../../images/logo.png" style={{width: "30px", height:"30px", objectFit:"cover", marginRight:"10px"}} />
+          <img src={logo} alt="VLU Market" style={{width: "30px", height:"30px", objectFit:"cover", marginRight:"10px"}} />
           VLU Market
         </Link>
       </div>

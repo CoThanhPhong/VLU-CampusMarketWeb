@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen }) => {
               const authorId = typeof authorField === 'object' ? authorField?._id || authorField?.id : authorField;
               
               const isMatchSeller = !currentSellerId || String(authorId) === String(currentSellerId);
-              if (isMatchSeller && item.status !== 'Đã xác nhận') {
+              if (isMatchSeller && item.status === 'Chờ xác nhận') {
                 count++;
               }
             });

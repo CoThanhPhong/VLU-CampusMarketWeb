@@ -13,6 +13,8 @@ router.get('/g', verifyToken, orderController.getMyOrders);
 router.put('/cancel', verifyToken, orderController.cancelOrder);
 router.put('/confirm', verifyToken, orderController.confirmOrderPayment);
 router.put('/confirm-item', verifyToken, orderController.confirmOrderItem);
+router.put('/reject', verifyToken, orderController.rejectSellerOrder);
+router.put('/reject-item', verifyToken, orderController.rejectOrderItem);
 router.get('/seller/g', verifyToken, orderController.getSellerOrders);
 
 
