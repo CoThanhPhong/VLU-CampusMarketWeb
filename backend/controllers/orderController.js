@@ -317,7 +317,7 @@ exports.rejectOrderItem = async (req, res) => {
 
     const order = await Order.findById(orderId).populate({
       path: 'orderItems.product',
-      select: 'author seller'
+      select: 'name img price author seller'
     });
 
     if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
@@ -359,7 +359,7 @@ exports.rejectSellerOrder = async (req, res) => {
 
     const order = await Order.findById(orderId).populate({
       path: 'orderItems.product',
-      select: 'author seller'
+      select: 'name img price author seller'
     });
 
     if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
