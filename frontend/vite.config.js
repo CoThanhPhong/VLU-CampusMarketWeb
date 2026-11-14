@@ -9,7 +9,7 @@ export default defineConfig({
     proxy: {
       // Cấu hình Proxy để gọi sang Backend (Express) không bị lỗi CORS
       '/api': {
-        target: 'http://localhost:5000', // Đổi port 5000 theo đúng port backend của bạn
+        target: 'https://vlu-campusmarketweb.onrender.com/', // Đổi port 5000 theo đúng port backend của bạn
         changeOrigin: true,
         secure: false,
       },
