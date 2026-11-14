@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ConfirmModal } from '../../components/toast/ConfirmModal';
 import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { calculateOrderDisplayTotals } from '../../utils/orderTotals';
 import '../../css/CustomModal.css';
 
 export default function OrderListPage() {
@@ -115,14 +116,7 @@ export default function OrderListPage() {
       ) : (
         orders.map(order => {
           const hasRejectedItems = order.orderItems.some(item => item.status === 'Đã từ chối');
-          const originalTotalPrice = order.originalTotalPrice ?? order.orderItems.reduce(
-            (total, item) => total + item.price * item.quantity,
-            0
-          );
-          const currentTotalPrice = order.totalPrice ?? order.orderItems.reduce(
-            (total, item) => total + (item.status === 'Đã từ chối' ? 0 : item.price * item.quantity),
-            0
-          );
+          const { originalTotalPrice, currentTotalPrice } = calculateOrderDisplayTotals(order);
           let badgeBg = '#fff3cd'; 
           let badgeColor = '#856404';
           if (order.orderStatus === 'Đã hủy') {
