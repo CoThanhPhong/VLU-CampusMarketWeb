@@ -253,7 +253,7 @@ export default function CreateProductPage() {
         price: numericPrice,
         amount: Number(formData.amount),
         local: formData.local,
-        status: formData.status,
+        status: isEditing ? formData.status : 'Còn hàng',
         deviceType: formData.deviceType,
         author: currentUserId,
         img: validImages,
@@ -375,10 +375,16 @@ export default function CreateProductPage() {
           </div>
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '600', color: '#334155' }}>Tình trạng</label>
-            <select name="status" value={formData.status} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }}>
-              <option value="Còn hàng">Còn hàng</option>
-              <option value="Hết hàng">Hết hàng</option> 
-            </select>
+            {isEditing ? (
+              <select name="status" value={formData.status} onChange={handleChange} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }}>
+                <option value="Còn hàng">Còn hàng</option>
+                <option value="Hết hàng">Hết hàng</option>
+              </select>
+            ) : (
+              <div style={{ padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '14px', color: '#64748b', backgroundColor: '#f8fafc' }}>
+                Còn hàng
+              </div>
+            )}
           </div>
         </div>
 
