@@ -388,6 +388,7 @@ export default function CreateProductPage() {
           </div>
         </div>
 
+
         {/* PHẦN QUẢN LÝ HÌNH ẢNH */}
         <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#334155', marginBottom: '10px' }}>
