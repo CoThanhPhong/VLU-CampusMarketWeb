@@ -18,7 +18,6 @@ export default function ProductList() {
 
   const [currentPage, setCurrentPage] = useState(pageFromUrl);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const limit = 20;
 
   // 2. Lắng nghe sự thay đổi của URL query parameters (hỗ trợ khi bấm nút Quay lại từ trang chi tiết)
@@ -43,7 +42,6 @@ export default function ProductList() {
           setProducts(res.data.data || []);
           setCurrentPage(res.data.currentPage || page);
           setTotalPages(res.data.totalPages || 1);
-          setTotalProducts(res.data.totalProducts || 0);
         }
       })
       .catch((err) => console.error('Lỗi API:', err))
@@ -174,7 +172,7 @@ export default function ProductList() {
 
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-          Danh sách bài đăng bán ({totalProducts})
+          Danh sách bài đăng bán
         </h2>
       </div>
 

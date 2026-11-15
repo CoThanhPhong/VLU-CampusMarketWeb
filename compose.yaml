@@ -8,9 +8,10 @@ services:
     restart: always
     ports:
       - "5000:5000"
+    env_file:
+      - ./backend/.env
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb+srv://dev:VLUCampusMarketDev@vlu-campusmarket.9xdnirr.mongodb.net/CampusMarket_db?appName=VLU-CampusMarket
 
   # 2. Frontend React / Vite (Dùng Nginx phục vụ file tĩnh siêu mượt)
   frontend:

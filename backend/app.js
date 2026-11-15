@@ -10,6 +10,11 @@ const orderRoutes = require('./routes/order');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 // Tạo một bộ giới hạn (Rate Limiter)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // Thời gian tính bằng milliseconds (Ví dụ: 15 phút)
@@ -23,11 +28,11 @@ const apiLimiter = rateLimit({
 });
 
 app.use(cors({
-  origin: 'http://localhost:5000', // Thay đổi nếu frontend chạy ở địa chỉ khác
-  credentials: true // Cho phép gửi cookie
+  origin: allowedOrigins.length ? allowedOrigins : false,
+  credentials: true
 }));
 app.use(session({
-  secret: 'VLU-CampusMarket', // Thay đổi thành một chuỗi bí mật mạnh mẽ
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { 
@@ -37,7 +42,7 @@ app.use(session({
    } // Nếu bạn sử dụng HTTPS, hãy đặt secure: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
 app.use(cookieParser());
 
 app.use('/api/auth', apiLimiter, authRoutes);

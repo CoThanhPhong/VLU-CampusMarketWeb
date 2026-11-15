@@ -39,7 +39,7 @@ const getAllUsers = async (req, res) => {
       });
     }
 
-    const users = await User.find().populate('profile');
+    const users = await User.find().select('-password').populate('profile');
     return res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
     console.error('Lỗi lấy danh sách user:', error.message);
@@ -92,7 +92,7 @@ const getUserById = async (req, res) => {
 const updateCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, phone, bio, avatar, cart, products } = req.body;
+    const { name, phone, bio, avatar } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -104,8 +104,6 @@ const updateCurrentUser = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar !== undefined) updateData.avatar = avatar;
-    if (cart !== undefined) updateData.cart = cart;
-    if (products !== undefined) updateData.products = products;
 
     let updatedProfile;
     if (user.profile) {
@@ -115,8 +113,16 @@ const updateCurrentUser = async (req, res) => {
         { returnDocument: true, runValidators: true }
       );
     } else {
-      updatedProfile = await UserDetail.create(updateData);
+      const profileData = { ...updateData, id: user._id };
+      if (!profileData.name || !profileData.phone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tên và số điện thoại là bắt buộc để tạo hồ sơ'
+        });
+      }
+      updatedProfile = await UserDetail.create(profileData);
       user.profile = updatedProfile._id;
+      await user.save();
     }
 
     user.profile = updatedProfile;
@@ -162,12 +168,15 @@ const updateUserRole = async (req, res) => {
         message: 'Role không hợp lệ (chỉ nhận user hoặc admin)!' 
       });
     }
+    if (String(userId) === String(req.user.id)) {
+      return res.status(400).json({ success: false, message: 'Không thể tự thay đổi quyền của chính mình' });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { role: newRole },
       { returnDocument: 'after', runValidators: true }
-    ).populate('profile');
+    ).select('-password').populate('profile');
 
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng cần phân quyền!' });
@@ -200,6 +209,9 @@ const deleteUser = async (req, res) => {
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: 'ID người dùng không hợp lệ!' });
+    }
+    if (String(userId) === String(req.user.id)) {
+      return res.status(400).json({ success: false, message: 'Không thể xóa chính tài khoản đang đăng nhập' });
     }
 
     const deletedUser = await User.findByIdAndDelete(userId);

@@ -50,7 +50,7 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, mssv: mssv, role: user.role }, 
-      process.env.JWT_SECRET || "VLU_SECRET_KEY", 
+      process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
 

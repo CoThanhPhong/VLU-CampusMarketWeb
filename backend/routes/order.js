@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/verifyToken');
+const { verifyToken, isAdmin } = require('../middleware/verifyToken');
 const orderController = require('../controllers/orderController');
 
 // 1. Tạo đơn hàng mới (Từ CheckoutPage)
@@ -11,7 +11,7 @@ router.get('/g', verifyToken, orderController.getMyOrders);
 
 // 3. Hủy đơn hàng
 router.put('/cancel', verifyToken, orderController.cancelOrder);
-router.put('/confirm', verifyToken, orderController.confirmOrderPayment);
+router.put('/confirm', verifyToken, isAdmin, orderController.confirmOrderPayment);
 router.put('/confirm-item', verifyToken, orderController.confirmOrderItem);
 router.put('/reject', verifyToken, orderController.rejectSellerOrder);
 router.put('/reject-item', verifyToken, orderController.rejectOrderItem);

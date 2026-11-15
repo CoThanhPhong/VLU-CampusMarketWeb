@@ -1,9 +1,11 @@
 ### Building and running your application
 
+Create `backend/.env` from `backend/.env.example`, then set `MONGO_URI` and a strong `JWT_SECRET`. Keep the populated `.env` file private.
+
 When you're ready, start your application by running:
 `docker compose up --build`.
 
-Your application will be available at http://localhost:5000.
+The frontend will be available at http://localhost:5001, and the backend API at http://localhost:5000.
 
 ### Deploying your application to the cloud
 

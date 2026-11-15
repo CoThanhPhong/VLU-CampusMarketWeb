@@ -2,6 +2,18 @@ const Product = require('../models/product');
 const User = require('../models/User');
 const UserDetail = require('../models/userDetail');
 
+const editableFields = ['name', 'description', 'price', 'amount', 'local', 'img', 'deviceType', 'endDate'];
+
+const getEditableProductData = (data) => Object.fromEntries(
+  editableFields
+    .filter(field => data[field] !== undefined)
+    .map(field => [field, data[field]])
+);
+
+const canManageProduct = (user, product) => (
+  user?.role === 'admin' || String(product.author) === String(user?.id)
+);
+
 // 1. CREATE: Tạo mới hoặc lưu sản phẩm & tự động đồng bộ vào UserDetail.products[]
 const createProduct = async (req, res) => {
   try {
@@ -11,8 +23,9 @@ const createProduct = async (req, res) => {
       // Trường hợp tạo mảng nhiều sản phẩm
       const formattedData = data.map(item => ({
         ...item,
-        status: item.status || 'Chờ duyệt',
-        startDate: item.startDate || new Date().toISOString()
+        author: req.user.id,
+        status: 'Chờ duyệt',
+        startDate: new Date()
       }));
       const newProducts = await Product.insertMany(formattedData);
 
@@ -35,36 +48,50 @@ const createProduct = async (req, res) => {
         data: newProducts
       });
     } else {
+      if (!data || typeof data !== 'object') {
+        return res.status(400).json({ success: false, message: 'Dữ liệu sản phẩm không hợp lệ' });
+      }
+
       let savedProduct;
-      const authorId = data.author;
 
       if (data._id) {
         // Cập nhật sản phẩm cũ
-        savedProduct = await Product.findByIdAndUpdate(data._id, data, { returnDocument: 'after', runValidators: true, upsert: true });
+        const existingProduct = await Product.findById(data._id);
+        if (!existingProduct) {
+          return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm để cập nhật' });
+        }
+        if (!canManageProduct(req.user, existingProduct)) {
+          return res.status(403).json({ success: false, message: 'Bạn không có quyền cập nhật sản phẩm này' });
+        }
+
+        savedProduct = await Product.findByIdAndUpdate(
+          data._id,
+          { $set: getEditableProductData(data) },
+          { returnDocument: 'after', runValidators: true }
+        );
       } else {
         // Đăng sản phẩm mới
         const productData = {
           ...data,
-          status: data.status || 'Chờ duyệt',
-          startDate: new Date().toISOString()
+          author: req.user.id,
+          status: 'Chờ duyệt',
+          startDate: new Date()
         };
         const newProduct = new Product(productData);
         savedProduct = await newProduct.save();
 
         // --- TỰ ĐỘNG THÊM PRODUCT ID VÀO MẢNG PRODUCTS CỦA USER DETAIL ---
-        if (authorId) {
-          const authorUser = await User.findById(authorId);
-          if (authorUser && authorUser.profile) {
-            await UserDetail.findByIdAndUpdate(
-              authorUser.profile,
-              { $addToSet: { products: savedProduct._id } }, // $addToSet giúp tránh bị trùng lặp ID
-              { new: true }
-            );
-          }
+        const authorUser = await User.findById(req.user.id);
+        if (authorUser?.profile) {
+          await UserDetail.findByIdAndUpdate(
+            authorUser.profile,
+            { $addToSet: { products: savedProduct._id } },
+            { new: true }
+          );
         }
       }
 
-      return res.status(201).json({
+      return res.status(data._id ? 200 : 201).json({
         success: true,
         message: 'Đăng bài thành công, đang chờ Admin duyệt!',
         data: savedProduct
@@ -85,8 +112,12 @@ const getProductById = async (req, res) => {
     let totalProducts = 0;
     
     if (!req.body || Object.keys(req.body).length === 0 || !req.body._id) {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 20;
+      const requestedPage = Number.parseInt(req.query.page, 10);
+      const requestedLimit = Number.parseInt(req.query.limit, 10);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 100)
+        : 20;
       const skip = (page - 1) * limit;
 
       let filter = {};
@@ -103,8 +134,10 @@ const getProductById = async (req, res) => {
         filter.deviceType = decodedDeviceType;
       }
 
-      if (req.query.search) {
-        filter.name = { $regex: req.query.search, $options: 'i' };
+      if (typeof req.query.search === 'string' && req.query.search.trim()) {
+        const searchTerm = req.query.search.trim().slice(0, 100);
+        const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.name = { $regex: escapedSearchTerm, $options: 'i' };
       }
 
       if (req.query.local && req.query.local !== 'all') {
@@ -163,9 +196,17 @@ const getProductById = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const productId = req.body._id || req.params.id;
+    const existingProduct = await Product.findById(productId);
+    if (!existingProduct) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm để cập nhật' });
+    }
+    if (!canManageProduct(req.user, existingProduct)) {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền cập nhật sản phẩm này' });
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
-      req.body,
+      { $set: getEditableProductData(req.body) },
       { returnDocument: 'after', runValidators: true }
     );
     if (!updatedProduct) {
@@ -185,10 +226,20 @@ const updateProduct = async (req, res) => {
 const updateProductStatus = async (req, res) => {
   try {
     const { productId, status } = req.body; 
-    const newStatus = status === 'Đã duyệt' ? 'Còn hàng' : 'Bị từ chối';
+    if (!['Đã duyệt', 'Bị từ chối'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Trạng thái duyệt không hợp lệ' });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+    }
+    const newStatus = status === 'Đã duyệt'
+      ? (product.amount > 0 ? 'Còn hàng' : 'Hết hàng')
+      : 'Bị từ chối';
 
     const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
+      product._id,
       { status: newStatus },
       { returnDocument: 'after' }
     );
@@ -210,10 +261,19 @@ const updateProductStatus = async (req, res) => {
 // 5. DELETE: Xóa sản phẩm theo ID & tự động gỡ bỏ ID khỏi UserDetail.products[]
 const deleteProduct = async (req, res) => {
   try {
-    const productId = req.body.productId || req.body._id || req.params.id;
+    const productId = req.body?.productId || req.body?._id || req.params.id;
     
     if (!productId) {
       return res.status(400).json({ success: false, message: 'Thiếu ID sản phẩm cần xóa' });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm để xóa' });
+    }
+
+    if (!canManageProduct(req.user, product)) {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa sản phẩm này' });
     }
 
     const deletedProduct = await Product.findByIdAndDelete(productId);
