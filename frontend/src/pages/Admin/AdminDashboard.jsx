@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ShieldAlert, Users, Package, Trash2, ArrowLeft, CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ShieldAlert, Users, Package, Trash2, ArrowLeft, CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -14,6 +14,8 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState([]);
   const [activeTab, setActiveTab] = useState('products'); // 'products' hoặc 'users'
   const [currentLoggedInUserId, setCurrentLoggedInUserId] = useState(null);
+  const [productSearch, setProductSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
 
   // Cấu hình phân trang Server-side (20 bài / trang)
   const [productPage, setProductPage] = useState(1);
@@ -56,15 +58,19 @@ export default function AdminDashboard() {
   // Gọi API lấy dữ liệu mỗi khi page thay đổi hoặc chuyển tab
   useEffect(() => {
     if (isAdmin) {
-      fetchAllAdminData(productPage);
+      const timeoutId = setTimeout(() => {
+        fetchAllAdminData(productPage, productSearch);
+      }, 250);
+      return () => clearTimeout(timeoutId);
     }
-  }, [isAdmin, productPage]);
+  }, [isAdmin, productPage, productSearch]);
 
-  const fetchAllAdminData = async (page = 1) => {
+  const fetchAllAdminData = async (page = 1, search = productSearch) => {
     setLoading(true);
     try {
-      // Truyền tham số isAdmin=true, page và limit lên Backend
-      const resProducts = await axios.get(`/api/products/g?isAdmin=true&page=${page}&limit=${itemsPerPage}`);
+      const searchParams = new URLSearchParams({ isAdmin: 'true', page: String(page), limit: String(itemsPerPage) });
+      if (search.trim()) searchParams.set('search', search.trim());
+      const resProducts = await axios.get(`/api/products/g?${searchParams.toString()}`);
       if (resProducts.data.success) {
         let prodData = resProducts.data.data || [];
         
@@ -90,8 +96,11 @@ export default function AdminDashboard() {
 
         setProducts(prodData);
         setTotalPages(resProducts.data.totalPages || 1);
-        setTotalProductsCount(resProducts.data.totalProducts || prodData.length);
-        setStats(prev => ({ ...prev, productsCount: resProducts.data.totalProducts || prodData.length }));
+        const totalProducts = resProducts.data.totalProducts ?? prodData.length;
+        setTotalProductsCount(totalProducts);
+        if (!search.trim()) {
+          setStats(prev => ({ ...prev, productsCount: totalProducts }));
+        }
       }
 
       try {
@@ -133,11 +142,12 @@ export default function AdminDashboard() {
   const handleBulkUpdateProductStatus = async (statusType) => {
     if (selectedProductIds.length === 0) return;
     const actionName = statusType === 'Đã duyệt' ? 'duyệt' : 'từ chối';
+    const apiStatus = statusType === 'Đã duyệt' ? 'Đã duyệt' : 'Bị từ chối';
     if (!window.confirm(`Bạn có chắc chắn muốn ${actionName} các bài đăng đã chọn?`)) return;
 
     try {
       await Promise.all(
-        selectedProductIds.map(id => axios.put('/api/products/update-status', { productId: id, status: statusType }))
+        selectedProductIds.map(id => axios.put('/api/products/update-status', { productId: id, status: apiStatus }))
       );
       
       alert(`Đã ${actionName} các bài đăng đã chọn thành công!`);
@@ -174,7 +184,7 @@ export default function AdminDashboard() {
   // --- XỬ LÝ CHECKBOX NGƯỜI DÙNG ---
   const handleSelectAllUsers = (e) => {
     if (e.target.checked) {
-      const selectableUsers = usersList
+      const selectableUsers = filteredUsers
         .filter(u => String(u._id) !== String(currentLoggedInUserId))
         .map(u => u._id);
       setSelectedUserIds(selectableUsers);
@@ -234,7 +244,8 @@ export default function AdminDashboard() {
   // Thao tác đơn lẻ
   const handleUpdateProductStatus = async (productId, statusType) => {
     try {
-      const res = await axios.put('/api/products/update-status', { productId, status: statusType });
+      const apiStatus = statusType === 'Đã duyệt' ? 'Đã duyệt' : 'Bị từ chối';
+      const res = await axios.put('/api/products/update-status', { productId, status: apiStatus });
       if (res.data.success) {
         alert(`Đã ${statusType} bài viết thành công!`);
         fetchAllAdminData(productPage);
@@ -350,6 +361,19 @@ export default function AdminDashboard() {
   const hasPendingSelected = products.some(
     p => selectedProductIds.includes(p._id) && (!p.status || p.status === 'Chờ duyệt')
   );
+  const normalizedUserSearch = userSearch.trim().toLocaleLowerCase();
+  const filteredUsers = usersList.filter(user => {
+    if (!normalizedUserSearch) return true;
+    const searchableValues = [
+      user.profile?.name,
+      user.name,
+      user.email,
+      user.mssv,
+      user.role,
+      user._id
+    ];
+    return searchableValues.some(value => String(value || '').toLocaleLowerCase().includes(normalizedUserSearch));
+  });
 
   return (
     <div style={{ maxWidth: '1200px', margin: '20px auto', padding: '0 16px' }}>
@@ -393,6 +417,27 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      <div style={{ marginBottom: '16px', position: 'relative', maxWidth: '440px' }}>
+        <Search size={17} style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+        <input
+          type="search"
+          value={activeTab === 'products' ? productSearch : userSearch}
+          onChange={event => {
+            if (activeTab === 'products') {
+              setProductSearch(event.target.value);
+              setProductPage(1);
+              setSelectedProductIds([]);
+            } else {
+              setUserSearch(event.target.value);
+              setSelectedUserIds([]);
+            }
+          }}
+          placeholder={activeTab === 'products' ? 'Tìm sản phẩm theo tên...' : 'Tìm tài khoản theo tên, MSSV, email, role hoặc ID...'}
+          aria-label={activeTab === 'products' ? 'Tìm sản phẩm' : 'Tìm tài khoản'}
+          style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+        />
+      </div>
+
       {/* CONTENT TABLE */}
       <div style={{ backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         
@@ -424,11 +469,12 @@ export default function AdminDashboard() {
                 <thead>
                   <tr style={{ backgroundColor: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
                     <th style={{ padding: '12px 16px', width: '40px' }}>
-                      <input type="checkbox" onChange={handleSelectAllProducts} checked={products.length > 0 && selectedProductIds.length === products.length} style={{ cursor: 'pointer' }} />
+                      <input type="checkbox" onChange={handleSelectAllProducts} checked={products.length > 0 && products.every(product => selectedProductIds.includes(product._id))} style={{ cursor: 'pointer' }} />
                     </th>
                     <th style={{ padding: '12px 16px' }}>Tên sản phẩm</th>
                     <th style={{ padding: '12px 16px' }}>Loại</th>
                     <th style={{ padding: '12px 16px' }}>Giá tiền</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Số lượng</th>
                     <th style={{ padding: '12px 16px' }}>Cơ sở</th>
                     <th style={{ padding: '12px 16px' }}>Trạng thái</th>
                     <th style={{ padding: '12px 16px', textAlign: 'center' }}>Thao tác kiểm duyệt</th>
@@ -439,8 +485,10 @@ export default function AdminDashboard() {
                     const isSelected = selectedProductIds.includes(item._id);
                     const isPending = !item.status || item.status === 'Chờ duyệt';
                     const isRejected = item.status === 'Bị từ chối';
-                    const isAvailable = item.status === 'Còn hàng' || item.status === 'Đã duyệt';
-                    const isSoldOut = item.status === 'Hết hàng' || item.amount === 0;
+                    const hasSellableStatus = item.status === 'Còn hàng' || item.status === 'Đã duyệt';
+                    const stockCount = Number(item.amount);
+                    const isSoldOut = item.status === 'Hết hàng' || (hasSellableStatus && stockCount <= 0);
+                    const isAvailable = hasSellableStatus && stockCount > 0;
 
                     return (
                       <tr key={item._id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: isSelected ? '#f8fafc' : 'transparent' }}>
@@ -452,6 +500,7 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ padding: '12px 16px', color: '#475569' }}>{item.deviceType}</td>
                         <td style={{ padding: '12px 16px', color: '#dc2626', fontWeight: '700' }}>{item.price?.toLocaleString('vi-VN')} VNĐ</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: '600', color: '#334155' }}>{Number(item.amount) || 0}</td>
                         <td style={{ padding: '12px 16px', color: '#475569' }}>{item.local}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <span style={{ 
@@ -459,8 +508,8 @@ export default function AdminDashboard() {
                             borderRadius: '4px', 
                             fontSize: '11px', 
                             fontWeight: '600', 
-                            backgroundColor: isAvailable ? '#dcfce7' : isSoldOut ? '#f1f5f9' : isPending ? '#fef3c7' : '#fee2e2', 
-                            color: isAvailable ? '#16a34a' : isSoldOut ? '#475569' : isPending ? '#d97706' : '#991b1b' 
+                            backgroundColor: isSoldOut ? '#f1f5f9' : isAvailable ? '#dcfce7' : isPending ? '#fef3c7' : '#fee2e2', 
+                            color: isSoldOut ? '#475569' : isAvailable ? '#16a34a' : isPending ? '#d97706' : '#991b1b' 
                           }}>
                             {isSoldOut ? 'Hết hàng' : (item.status || 'Chờ duyệt')}
                           </span>
@@ -584,7 +633,7 @@ export default function AdminDashboard() {
                 <thead>
                   <tr style={{ backgroundColor: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
                     <th style={{ padding: '12px 16px', width: '40px' }}>
-                      <input type="checkbox" onChange={handleSelectAllUsers} checked={usersList.filter(u => String(u._id) !== String(currentLoggedInUserId)).length > 0 && selectedUserIds.length === usersList.filter(u => String(u._id) !== String(currentLoggedInUserId)).length} style={{ cursor: 'pointer' }} />
+                      <input type="checkbox" onChange={handleSelectAllUsers} checked={filteredUsers.filter(u => String(u._id) !== String(currentLoggedInUserId)).length > 0 && filteredUsers.filter(u => String(u._id) !== String(currentLoggedInUserId)).every(user => selectedUserIds.includes(user._id))} style={{ cursor: 'pointer' }} />
                     </th>
                     <th style={{ padding: '12px 16px' }}>Họ tên</th>
                     <th style={{ padding: '12px 16px' }}>Email</th>
@@ -594,14 +643,14 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {usersList.length === 0 ? (
+                  {filteredUsers.length === 0 ? (
                     <tr>
                       <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
-                        Chưa có dữ liệu người dùng hoặc đang tải...
+                        {usersList.length === 0 ? 'Chưa có dữ liệu người dùng.' : 'Không tìm thấy tài khoản phù hợp.'}
                       </td>
                     </tr>
                   ) : (
-                    usersList.map((user) => {
+                    filteredUsers.map((user) => {
                       const isSelf = String(user._id) === String(currentLoggedInUserId);
                       const isSelected = selectedUserIds.includes(user._id);
 

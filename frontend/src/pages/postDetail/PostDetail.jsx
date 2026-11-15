@@ -116,6 +116,9 @@ export default function PostDetail() {
   );
 
   const available = product.status === "Còn hàng" && product.amount > 0;
+  const displayStatus = product.amount <= 0 && ["Còn hàng", "Đã duyệt", "Hết hàng"].includes(product.status)
+    ? "Hết hàng"
+    : product.status || "Chưa rõ trạng thái";
 
   let imageList = [];
   if (Array.isArray(product.img) && product.img.length > 0) {
@@ -257,7 +260,7 @@ export default function PostDetail() {
             <div className="post-title-row">
               <h1>{product.name || "Sản phẩm chưa có tên"}</h1>
               <span className={`status-pill ${available ? "available" : "unavailable"}`}>
-                {product.status || "Chưa rõ trạng thái"}
+                {displayStatus}
               </span>
             </div>
           </div>
